@@ -1,0 +1,30 @@
+@import './base.css';
+
+#app {
+  width: 800px;
+  max-width: 1280px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 2rem 4rem;
+
+  font-weight: normal;
+
+  background-color: #222;
+}
+
+a {
+  text-decoration: none;
+  color: #699fd1;
+  transition: 0.4s;
+}
+
+@media (hover: hover) {
+  a:hover {
+    color: #afd0ee;
+  }
+}
+
+h1,
+h2 {
+  margin: 1rem 0 1rem 0;
+}

@@ -1,0 +1,37 @@
+{
+	"name": "smol-string",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"test": "vitest",
+		"test:chrome": "vitest --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
+		"test:firefox": "vitest --browser.name=firefox --browser.headless --config browser.vitest.config.ts",
+		"test:edge": "vitest --browser.name=edge --browser.headless --config browser.vitest.config.ts",
+		"test:safari": "vitest --browser.name=safari --browser.headless --config browser.vitest.config.ts",
+		"bench": "vitest bench"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/smol-string.js",
+			"require": "./dist/smol-string.cjs"
+		},
+		"./packed": {
+			"import": "./dist/smol-string-packed.js",
+			"require": "./dist/smol-string-packed.cjs"
+		}
+	},
+	"devDependencies": {
+		"@vitest/browser": "^0.34.6",
+		"typescript": "^5.2.2",
+		"vite": "^4.4.5",
+		"vitest": "^0.34.6",
+		"webdriverio": "^8.20.4"
+	},
+	"dependencies": {
+		"vite-plugin-dts": "^3.6.2"
+	}
+}

@@ -1,0 +1,50 @@
+name: TS Lib
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    ts-lib:
+        strategy:
+            matrix:
+                node-version: [18.x]
+                os: [ubuntu-latest, windows-latest, macos-latest]
+
+        runs-on: ${{ matrix.os }}
+
+        defaults:
+            run:
+                working-directory: ./ts-lib
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: "npm"
+                  cache-dependency-path: ts-lib/package-lock.json
+            - name: Install dependencies
+              run: npm ci
+            - name: Build
+              run: npm run build
+            - name: Run tests
+              run: npm test
+            - name: Safari Tests
+              if: matrix.os  == 'macos-latest'
+              run: npm run test:safari
+            - name: Chrome Tests
+              if: always()
+              run: npm run test:chrome
+            - name: Firefox Tests
+              if: always()
+              run: npm run test:firefox
+            - name: Edge Tests
+              if: always()
+              run: npm run test:edge
+            - name: Benchmarks
+              if: always()
+              run: npm run bench
