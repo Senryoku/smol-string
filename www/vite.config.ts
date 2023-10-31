@@ -9,6 +9,10 @@ export default defineConfig({
   build: {
     target: 'esnext'
   },
+  // https://github.com/vitejs/vite/issues/9062
+  optimizeDeps: {
+    esbuildOptions: { target: 'esnext' }
+  },
   plugins: [vue()],
   resolve: {
     alias: {
