@@ -1,7 +1,24 @@
 {
 	"name": "smol-string",
-	"private": true,
 	"version": "0.0.0",
+	"description": "Compression for browser localStorage",
+	"author": "Senryoku <maretverdant@gmail.com>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Senryoku/smol-string.git"
+	},
+	"license": "MIT",
+	"keywords": [
+		"compression",
+		"browser",
+		"localStorage",
+		"zig",
+		"typescript"
+	],
+	"bugs": {
+		"url": "https://github.com/Senryoku/smol-string/issues"
+	},
+	"homepage": "https://github.com/Senryoku/smol-string",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -15,14 +32,10 @@
 		"bench": "vitest bench"
 	},
 	"exports": {
-		".": {
-			"import": "./dist/smol-string.js",
-			"require": "./dist/smol-string.cjs"
-		},
-		"./packed": {
-			"import": "./dist/smol-string-packed.js",
-			"require": "./dist/smol-string-packed.cjs"
-		}
+		".": "./dist/smol-string",
+		"./packed": "./dist/smol-string-packed",
+		"./worker": "./dist/smol-string-worker",
+		"./worker/packed": "./dist/smol-string-worker-packed"
 	},
 	"devDependencies": {
 		"@vitest/browser": "^0.34.6",
