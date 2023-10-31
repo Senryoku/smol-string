@@ -41,8 +41,8 @@ ChartJS.defaults.borderColor = '#555'
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors)
 
-import { compress, decompress } from '../../../ts-lib/dist/smol-string.js'
-import { compressPacked, decompressPacked } from '../../../ts-lib/dist/smol-string-packed.js'
+import { compress, decompress } from 'smol-string'
+import { compressPacked, decompressPacked } from 'smol-string/packed'
 
 // @ts-expect-error
 import LZString from '../../lz-string.min.js'

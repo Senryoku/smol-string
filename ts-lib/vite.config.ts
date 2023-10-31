@@ -21,7 +21,7 @@ export default defineConfig({
 				/^node:.*/, // don't bundle built-in Node.js modules (use protocol imports!)
 			],
 		},
-		target: "esnext", // transpile as little as possible
+		target: "esnext",
 	},
 	worker: {
 		format: "es",

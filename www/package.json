@@ -2,6 +2,7 @@
   "name": "benchmark",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
@@ -14,6 +15,7 @@
   "dependencies": {
     "chart.js": "^4.4.0",
     "pinia": "^2.1.7",
+    "smol-string": "file:../ts-lib",
     "vue": "^3.3.4",
     "vue-chartjs": "^5.2.0",
     "vue-router": "^4.2.5"

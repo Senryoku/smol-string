@@ -31,20 +31,32 @@
 		"test:safari": "vitest --browser.name=safari --browser.headless --config browser.vitest.config.ts",
 		"bench": "vitest bench"
 	},
+	"main": "./dist/smol-string.js",
 	"exports": {
-		".": "./dist/smol-string",
-		"./packed": "./dist/smol-string-packed",
-		"./worker": "./dist/smol-string-worker",
-		"./worker/packed": "./dist/smol-string-worker-packed"
+		".": {
+			"types": "./dist/smol-string.d.ts",
+			"import": "./dist/smol-string.js"
+		},
+		"./packed": {
+			"types": "./dist/smol-string-packed.d.ts",
+			"import": "./dist/smol-string-packed.js"
+		},
+		"./worker": {
+			"types": "./dist/smol-string-worker.d.ts",
+			"import": "./dist/smol-string-worker.js"
+		},
+		"./worker/packed": {
+			"types": "./dist/smol-string-worker-packed.d.ts",
+			"import": "./dist/smol-string-worker-packed.js"
+		}
 	},
 	"devDependencies": {
 		"@vitest/browser": "^0.34.6",
 		"typescript": "^5.2.2",
 		"vite": "^4.4.5",
 		"vitest": "^0.34.6",
-		"webdriverio": "^8.20.4"
-	},
-	"dependencies": {
+		"webdriverio": "^8.20.4",
 		"vite-plugin-dts": "^3.6.2"
-	}
+	},
+	"dependencies": {}
 }
