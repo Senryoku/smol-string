@@ -80,7 +80,7 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
         }
 
         pub fn append(self: *@This(), value: ValueType) !void {
-            if (self.value_size < @bitSizeOf(ValueType) and self.size_since_reset + (comptime std.math.pow(usize, 2, @max(0, initial_bit_size - 1))) >= std.math.pow(usize, 2, self.value_size) - 1) {
+            if (self.value_size < @bitSizeOf(ValueType) and self.size_since_reset + (comptime std.math.pow(usize, 2, @max(0, initial_bit_size - 1))) >= (@as(u32, 1) << @intCast(self.value_size)) - 1) {
                 self.value_size += 1;
             }
 
@@ -126,7 +126,7 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
             pub fn next(self: *@This()) ?ValueType {
                 if (self.index >= self.bp.size) return null;
 
-                if (self.value_size < @bitSizeOf(ValueType) and self.index_since_reset + (comptime std.math.pow(usize, 2, @max(0, initial_bit_size - 1))) >= std.math.pow(usize, 2, self.value_size) - 1) {
+                if (self.value_size < @bitSizeOf(ValueType) and self.index_since_reset + (comptime std.math.pow(usize, 2, @max(0, initial_bit_size - 1))) >= (@as(u32, 1) << @intCast(self.value_size)) - 1) {
                     self.value_size += 1;
                 }
 
