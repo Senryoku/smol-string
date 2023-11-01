@@ -96,10 +96,8 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
                     self.arr.items[self.arr.items.len - 1] |= @as(UnderlyingType, @intCast(value)) << @intCast(@bitSizeOf(UnderlyingType) - self.bit - self.value_size);
                     self.bit += self.value_size;
                 } else {
-                    // TODO: Do both shifts using a single rotate?
                     const available_bits = @bitSizeOf(UnderlyingType) - self.bit;
                     self.arr.items[self.arr.items.len - 1] |= @as(UnderlyingType, @intCast(value)) >> @intCast(self.value_size - available_bits);
-
                     var shifted = @as(UnderlyingType, @intCast(value)) << @intCast(@bitSizeOf(UnderlyingType) - (self.value_size - available_bits)); // Mask reserved bits
                     try self.arr.append(shifted >> reserved_bits);
                     self.bit = reserved_bits + (self.value_size - available_bits);
