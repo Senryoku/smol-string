@@ -27,8 +27,9 @@ export function compressPacked(str: string) {
 	const footer = new Uint16Array(
 		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
-	const streamLength = (footer.at(0)! << 16) + footer.at(1)!;
-	const capacity = (footer.at(2)! << 16) + footer.at(3)!;
+	// FIXME: Little endian while all the others are big endian...
+	const streamLength = (footer.at(1)! << 16) + footer.at(0)!;
+	const capacity = (footer.at(3)! << 16) + footer.at(2)!;
 	const start = ptrToFooter - 2 * streamLength;
 
 	// Includes the tokenCount at the end of the stream (2 * u16).
@@ -45,8 +46,8 @@ export function compressPacked(str: string) {
 
 export function decompressPacked(compressedStr: string) {
 	const tokenCount =
-		(compressedStr.charCodeAt(compressedStr.length - 2)! << 16) +
-		compressedStr.charCodeAt(compressedStr.length - 1);
+		(compressedStr.charCodeAt(compressedStr.length - 1)! << 16) +
+		compressedStr.charCodeAt(compressedStr.length - 2);
 
 	let ptrToCompressed = exports.allocUint16(compressedStr.length - 2);
 	let compressed_buffer = new Uint16Array(
