@@ -4,16 +4,15 @@ export function copyToWasmBuffer(
 ) {
 	// There's also an 'encodeInto' method to avoid a copy, but by encoding first, we con allocate only exactly what we need.
 	const utf8Str = new TextEncoder().encode(str);
-	const ptrToStr = exports.allocUint8(utf8Str.length + 1);
+	const ptrToStr = exports.allocUint8(utf8Str.length);
 	const inBuffer = new Uint8Array(
 		exports.memory.buffer,
 		ptrToStr,
-		utf8Str.length + 1
+		utf8Str.length
 	);
 	inBuffer.set(utf8Str); // Copy to WASM buffer.
-	inBuffer[utf8Str.length] = 0; // null terminate it.
 
-	return { ptr: ptrToStr, length: utf8Str.length + 1 };
+	return { ptr: ptrToStr, length: utf8Str.length };
 }
 
 // Horrible. Surely we can do better...

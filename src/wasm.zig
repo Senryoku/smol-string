@@ -9,9 +9,9 @@ comptime {
     @export(wasmAllocator.free, .{ .name = "free", .linkage = .Strong });
 }
 
-export fn compress(null_terminated: [*:0]const u8) i32 {
+export fn compress(ptr: [*]const u8, length: usize) i32 {
     const allocator = std.heap.page_allocator;
-    const data: []const u8 = std.mem.span(null_terminated); // FIXME: Should we pass a length?
+    const data: []const u8 = ptr[0..length];
     var output = impl.compress(u16, 0, 0xFFFE, data, allocator) catch {
         return 0;
     };
@@ -21,9 +21,9 @@ export fn compress(null_terminated: [*:0]const u8) i32 {
     return @intCast(@intFromPtr(r.ptr));
 }
 
-export fn decompress(null_terminated: [*:0]const u16) i32 {
+export fn decompress(ptr: [*]const u16, length: usize) i32 {
     const allocator = std.heap.page_allocator;
-    const data: []const u16 = std.mem.span(null_terminated);
+    const data: []const u16 = ptr[0..length];
     var output = impl.decompress(u16, 0, 0xFFFE, data, allocator) catch {
         return 0;
     };
