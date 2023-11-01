@@ -4,7 +4,7 @@ const bp = @import("./BitPacker.zig");
 
 const impl = @import("lzw.zig");
 
-pub const BitPacker = bp.BitPacker(u16, u20, 9, 0);
+pub const BitPacker = bp.BitPacker(u64, u20, 9, 0);
 pub const sentinel_token = std.math.maxInt(BitPacker.ValueType);
 
 pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker {

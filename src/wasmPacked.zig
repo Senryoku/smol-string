@@ -12,6 +12,10 @@ comptime {
     @export(wasmAllocator.free, .{ .name = "free", .linkage = .Strong });
 }
 
+comptime {
+    std.debug.assert(@bitSizeOf(usize) <= @bitSizeOf(u32));
+}
+
 export fn compressPacked(ptr: [*]u8, length: usize) i32 {
     const allocator = std.heap.page_allocator;
     const data: []const u8 = ptr[0..length];
@@ -19,18 +23,15 @@ export fn compressPacked(ptr: [*]u8, length: usize) i32 {
         return 0;
     };
 
-    const content_length = output.arr.items.len + 2;
-    output.arr.ensureTotalCapacity(output.arr.items.len + 6) catch {
+    const content_length = output.arr.items.len * 4 + 2; // In u16
+    output.arr.ensureTotalCapacity(output.arr.items.len + 2) catch {
         return 0;
     };
-    output.arr.appendAssumeCapacity(@intCast(output.size >> 16));
-    output.arr.appendAssumeCapacity(@intCast(output.size & 0xFFFF));
-    output.arr.appendAssumeCapacity(@intCast(content_length >> 16));
-    output.arr.appendAssumeCapacity(@intCast(content_length & 0xFFFF));
-    output.arr.appendAssumeCapacity(@intCast(output.arr.capacity >> 16));
-    output.arr.appendAssumeCapacity(@intCast(output.arr.capacity & 0xFFFF));
+    // Token Count followed by the usual footer
+    output.arr.appendAssumeCapacity((@as(u64, @intCast(content_length)) << 32) | output.size);
+    output.arr.appendAssumeCapacity((@as(u64, @intCast(output.arr.capacity * 2))));
 
-    return @intCast(@intFromPtr(output.arr.items.ptr + content_length));
+    return @intCast(@intFromPtr(output.arr.items.ptr + output.arr.items.len - 2) + 4);
 }
 
 export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length: usize, token_count: usize) i32 {

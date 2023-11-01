@@ -3,8 +3,6 @@ const std = @import("std");
 // initial_bit_size: Determine the initial expected max values.
 // reserved_bits: Skip this number of bits in each array item. Reduces the packer efficiency to produce valid values for your target encoding.
 pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comptime initial_bit_size: u8, comptime reserved_bits: u8) type {
-    std.debug.assert(@bitSizeOf(_UnderlyingType) <= @bitSizeOf(_ValueType)); // We can probably support it, we just don't right now.
-
     return struct {
         arr: std.ArrayList(UnderlyingType),
 
@@ -96,10 +94,16 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
 
                 const to_write = @min(remaining_bits, @bitSizeOf(UnderlyingType) - self.bit);
 
-                var shifted: ValueType = value << @intCast(@bitSizeOf(ValueType) - remaining_bits); // "Mask" high bits
-                shifted >>= @intCast(self.bit + (@bitSizeOf(ValueType) - @bitSizeOf(UnderlyingType)));
-                self.arr.items[self.arr.items.len - 1] |= @intCast(shifted);
-
+                // FIXME: This can probably be simplified
+                if (comptime (@bitSizeOf(ValueType) < @bitSizeOf(UnderlyingType))) {
+                    var shifted: UnderlyingType = @as(UnderlyingType, @intCast(value)) << @intCast(@bitSizeOf(UnderlyingType) - remaining_bits); // "Mask" high bits
+                    shifted >>= @intCast(self.bit);
+                    self.arr.items[self.arr.items.len - 1] |= shifted;
+                } else {
+                    var shifted: ValueType = value << @intCast(@bitSizeOf(ValueType) - remaining_bits); // "Mask" high bits
+                    shifted >>= @intCast(self.bit + (@bitSizeOf(ValueType) - @bitSizeOf(UnderlyingType)));
+                    self.arr.items[self.arr.items.len - 1] |= @intCast(shifted);
+                }
                 remaining_bits -= to_write;
 
                 self.bit += to_write;
