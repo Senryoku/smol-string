@@ -1,10 +1,10 @@
 function s(e, n) {
-  const t = new TextEncoder().encode(e), a = n.allocUint8(t.length + 1), r = new Uint8Array(
+  const t = new TextEncoder().encode(e), a = n.allocUint8(t.length);
+  return new Uint8Array(
     n.memory.buffer,
     a,
-    t.length + 1
-  );
-  return r.set(t), r[t.length] = 0, { ptr: a, length: t.length + 1 };
+    t.length
+  ).set(t), { ptr: a, length: t.length };
 }
 function f(e) {
   const n = new Array(e.length);

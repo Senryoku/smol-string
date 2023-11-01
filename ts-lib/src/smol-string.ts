@@ -16,23 +16,24 @@ const exports = instance.exports as exportsType;
 export function compress(str: string) {
 	const { ptr, length } = copyToWasmBuffer(str, exports);
 
-	const ptrToCompressed = exports.compress(ptr, length);
+	const ptrToFooter = exports.compress(ptr, length);
 
 	exports.free(ptr, length);
 
-	const buffer = new Uint16Array(
-		exports.memory.buffer.slice(
-			ptrToCompressed,
-			ptrToCompressed +
-				(exports.memory.buffer.byteLength - ptrToCompressed)
-		)
+	const footer = new Uint16Array(
+		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
-	const end = buffer.indexOf(0);
-	const compressed = buffer.slice(0, end);
+	const streamLength = (footer.at(0)! << 16) + footer.at(1)!;
+	const capacity = (footer.at(2)! << 16) + footer.at(3)!;
+	const start = ptrToFooter - 2 * streamLength;
+
+	const compressed = new Uint16Array(
+		exports.memory.buffer.slice(start, ptrToFooter)
+	);
 
 	const r = Uint16ArraytoString(compressed);
 
-	exports.free(ptrToCompressed, end + 1);
+	exports.free(start, capacity);
 
 	return r;
 }
@@ -47,28 +48,35 @@ export function decompress(compressedStr: string) {
 	for (let i = 0; i < compressedStr.length; i++)
 		compressed_buffer[i] = compressedStr.charCodeAt(i);
 
-	const ptrToDecompressedNullTerminated = exports.decompress(
+	const ptrToFooter = exports.decompress(
 		ptrToCompressed,
 		compressedStr.length
 	);
 
 	exports.free(ptrToCompressed, compressedStr.length);
 
-	const decompressed_buffer = new Uint8Array(
-		exports.memory.buffer.slice(
-			ptrToDecompressedNullTerminated,
-			ptrToDecompressedNullTerminated +
-				(exports.memory.buffer.byteLength -
-					ptrToDecompressedNullTerminated)
-		)
+	const footer = new Uint8Array(
+		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
-	const decompressed_end = decompressed_buffer.indexOf(0);
+	const streamLength =
+		(footer.at(0)! << 24) +
+		(footer.at(1)! << 16) +
+		(footer.at(2)! << 8) +
+		footer.at(3)!;
+	const capacity =
+		(footer.at(4)! << 24) +
+		(footer.at(5)! << 16) +
+		(footer.at(6)! << 8) +
+		footer.at(7)!;
+	const start = ptrToFooter - streamLength;
 
-	exports.free(ptrToDecompressedNullTerminated, decompressed_end + 1);
-
-	const r = new TextDecoder().decode(
-		decompressed_buffer.slice(0, decompressed_end)
+	const decompressed = new Uint8Array(
+		exports.memory.buffer.slice(start, ptrToFooter)
 	);
+
+	const r = new TextDecoder().decode(decompressed);
+
+	exports.free(start, capacity);
 
 	return r;
 }

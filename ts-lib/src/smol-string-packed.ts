@@ -20,31 +20,33 @@ const exports = instance.exports as exportsType;
 export function compressPacked(str: string) {
 	const { ptr, length } = copyToWasmBuffer(str, exports);
 
-	const ptrToCompressed = exports.compressPacked(ptr, length);
+	const ptrToFooter = exports.compressPacked(ptr, length);
 
 	exports.free(ptr, length);
 
-	const buffer = new Uint16Array(
-		exports.memory.buffer.slice(
-			ptrToCompressed,
-			ptrToCompressed +
-				(exports.memory.buffer.byteLength - ptrToCompressed)
-		)
+	const footer = new Uint16Array(
+		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
-	const streamLength = (buffer.at(0)! << 16) + buffer.at(1)!;
-	// Includes the tokenCount at the start of the stream (2 * u16).
-	const compressedBuffer = buffer.slice(2, streamLength);
+	const streamLength = (footer.at(0)! << 16) + footer.at(1)!;
+	const capacity = (footer.at(2)! << 16) + footer.at(3)!;
+	const start = ptrToFooter - 2 * streamLength;
 
-	const compressed = Uint16ArraytoString(compressedBuffer);
+	// Includes the tokenCount at the end of the stream (2 * u16).
+	const compressed = new Uint16Array(
+		exports.memory.buffer.slice(start, ptrToFooter)
+	);
 
-	exports.free(ptrToCompressed, streamLength);
+	const r = Uint16ArraytoString(compressed);
 
-	return compressed;
+	exports.free(start, capacity);
+
+	return r;
 }
 
 export function decompressPacked(compressedStr: string) {
 	const tokenCount =
-		(compressedStr.charCodeAt(0)! << 16) + compressedStr.charCodeAt(1);
+		(compressedStr.charCodeAt(compressedStr.length - 2)! << 16) +
+		compressedStr.charCodeAt(compressedStr.length - 1);
 
 	let ptrToCompressed = exports.allocUint16(compressedStr.length - 2);
 	let compressed_buffer = new Uint16Array(
@@ -53,31 +55,39 @@ export function decompressPacked(compressedStr: string) {
 		compressedStr.length - 2
 	);
 
-	for (let i = 2; i < compressedStr.length; i++)
-		compressed_buffer[i - 2] = compressedStr.charCodeAt(i);
+	for (let i = 0; i < compressedStr.length - 2; i++)
+		compressed_buffer[i] = compressedStr.charCodeAt(i);
 
-	const ptrToDecompressedNullTerminated = exports.decompressPacked(
+	const ptrToFooter = exports.decompressPacked(
 		ptrToCompressed,
-		compressedStr.length,
+		compressedStr.length - 2,
 		tokenCount
 	);
 
-	exports.free(ptrToCompressed, compressedStr.length);
+	exports.free(ptrToCompressed, compressedStr.length - 2);
 
-	const decompressed_buffer = new Uint8Array(
-		exports.memory.buffer.slice(
-			ptrToDecompressedNullTerminated,
-			ptrToDecompressedNullTerminated +
-				(exports.memory.buffer.byteLength -
-					ptrToDecompressedNullTerminated)
-		)
+	const footer = new Uint8Array(
+		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
-	const decompressed_end = decompressed_buffer.indexOf(0);
-	const r = new TextDecoder().decode(
-		decompressed_buffer.slice(0, decompressed_end)
+	const streamLength =
+		(footer.at(0)! << 24) +
+		(footer.at(1)! << 16) +
+		(footer.at(2)! << 8) +
+		footer.at(3)!;
+	const capacity =
+		(footer.at(4)! << 24) +
+		(footer.at(5)! << 16) +
+		(footer.at(6)! << 8) +
+		footer.at(7)!;
+	const start = ptrToFooter - streamLength;
+
+	const decompressed = new Uint8Array(
+		exports.memory.buffer.slice(start, ptrToFooter)
 	);
 
-	exports.free(ptrToDecompressedNullTerminated, decompressed_end + 1);
+	const r = new TextDecoder().decode(decompressed);
+
+	exports.free(start, capacity);
 
 	return r;
 }

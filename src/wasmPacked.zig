@@ -18,21 +18,19 @@ export fn compressPacked(ptr: [*]u8, length: usize) i32 {
     var output = packed_impl.compressPacked(data, allocator) catch {
         return 0;
     };
-    defer output.deinit();
 
-    // We could preallocate the array and leave space for our 'header' to avoid this copy.
-    // However this should only be the responsibility of this WASM interface, not compressPacked.
-    // We could also ask for an additional buffer to output these information...
-    var r = allocator.alloc(u16, output.arr.items.len + 4) catch {
+    const content_length = output.arr.items.len + 2;
+    output.arr.ensureTotalCapacity(output.arr.items.len + 6) catch {
         return 0;
     };
-    r[0] = @intCast(r.len >> 16);
-    r[1] = @intCast(r.len & 0xFFFF);
-    r[2] = @intCast(output.size >> 16);
-    r[3] = @intCast(output.size & 0xFFFF);
-    std.mem.copy(u16, r[4..], output.arr.items);
+    output.arr.appendAssumeCapacity(@intCast(output.size >> 16));
+    output.arr.appendAssumeCapacity(@intCast(output.size & 0xFFFF));
+    output.arr.appendAssumeCapacity(@intCast(content_length >> 16));
+    output.arr.appendAssumeCapacity(@intCast(content_length & 0xFFFF));
+    output.arr.appendAssumeCapacity(@intCast(output.arr.capacity >> 16));
+    output.arr.appendAssumeCapacity(@intCast(output.arr.capacity & 0xFFFF));
 
-    return @intCast(@intFromPtr(r.ptr));
+    return @intCast(@intFromPtr(output.arr.items.ptr + content_length));
 }
 
 export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length: usize, token_count: usize) i32 {
@@ -52,8 +50,19 @@ export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length:
     var output = impl.decompress(packed_impl.BitPacker.ValueType, 0, packed_impl.sentinel_token, unpackedData, allocator) catch {
         return 0;
     };
-    const r = output.toOwnedSliceSentinel(0) catch {
+
+    const content_length = output.items.len;
+    output.ensureTotalCapacity(output.items.len + 8) catch {
         return 0;
     };
-    return @intCast(@intFromPtr(r.ptr));
+    output.appendAssumeCapacity(@intCast((content_length >> 24) & 0xFF));
+    output.appendAssumeCapacity(@intCast((content_length >> 16) & 0xFF));
+    output.appendAssumeCapacity(@intCast((content_length >> 8) & 0xFF));
+    output.appendAssumeCapacity(@intCast((content_length >> 0) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 24) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 16) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 8) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 0) & 0xFF));
+
+    return @intCast(@intFromPtr(output.items.ptr + content_length));
 }
