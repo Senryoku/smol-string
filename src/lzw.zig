@@ -1,6 +1,8 @@
 const std = @import("std");
 
 pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const u8, allocator: std.mem.Allocator) !std.ArrayList(TokenType) {
+    if (data.len == 0) return std.ArrayList(TokenType).init(allocator);
+
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
     var next_value: TokenType = first_allocated_token;
     var context = std.StringHashMap(TokenType).init(allocator);
@@ -49,6 +51,8 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
 }
 
 pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, allocator: std.mem.Allocator) !std.ArrayList(u8) {
+    if (data.len == 0) return std.ArrayList(u8).init(allocator);
+
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
     var next_value: TokenType = first_allocated_token;
     var context = std.ArrayList(?[]u8).init(allocator);
@@ -57,7 +61,7 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
     context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
 
     // FIXME: We need to make sure pointers to that buffer will be stable for the slices in context to stay valid.
-    var output = try std.ArrayList(u8).initCapacity(allocator, 20 * data.len);
+    var output = try std.ArrayList(u8).initCapacity(allocator, 24 * data.len);
     output.appendAssumeCapacity(@intCast(data[0] - reserved_codepoints));
 
     context.items[data[0]] = output.items[0..1];
@@ -119,6 +123,8 @@ fn testRound(str: []const u8) !void {
 }
 
 test "basic" {
+    try testRound("");
+    try testRound("a");
     try testRound("aa");
     try testRound("aaaa");
     try testRound("aaaaaa");
@@ -132,40 +138,57 @@ test "basic" {
     try testRound("33337373737");
     try testRound("3333737373700000000000000000000");
     try testRound("3333773737373777777373773737373");
+}
 
+test "fuzzing" {
     // Doesn't ensure that the string is valid UTF-8, but it should not matter.
-    var rng = std.rand.DefaultPrng.init(42);
-
-    {
-        var str: [100]u8 = undefined;
-        for (0..100) |i| {
-            str[i] = rng.random().int(u8);
-        }
-        try testRound(&str);
-    }
-    {
-        var str: [1000]u8 = undefined;
-        for (0..1000) |i| {
-            str[i] = rng.random().int(u8);
-        }
-        try testRound(&str);
+    // Note: In the future, use std.testing.random_seed. See https://github.com/ziglang/zig/issues/17609.
+    const seed = std.crypto.random.int(u64);
+    errdefer std.debug.print("\nFuzzing Test FAILED\n\tSeed: {d}\n", .{seed});
+    var rng = std.rand.DefaultPrng.init(seed);
+    for (0..10) |_| {
+        const length = rng.random().intRangeAtMost(usize, 0, 10_000_000); // Up to ~10MB
+        var str = try std.testing.allocator.alloc(u8, length);
+        defer std.testing.allocator.free(str);
+        rng.fill(str);
+        try testRound(str);
     }
 }
 
-test "json small" {
-    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, "test/data/json_small.json", 1e8);
+fn testFile(path: []const u8) !void {
+    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, path, 1e8);
     defer std.testing.allocator.free(str);
     try testRound(str);
+}
+
+test "json 64KB" {
+    try testFile("test/data/64KB.json");
+}
+
+test "json 128KB" {
+    try testFile("test/data/128KB.json");
+}
+
+test "json 256KB" {
+    try testFile("test/data/256KB.json");
+}
+
+test "json 512KB" {
+    try testFile("test/data/512KB.json");
+}
+
+test "json 1MB" {
+    try testFile("test/data/1MB.json");
+}
+
+test "json 5MB" {
+    try testFile("test/data/5MB.json");
 }
 
 test "real world medium" {
-    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, "test/data/rw_medium.json", 1e8);
-    defer std.testing.allocator.free(str);
-    try testRound(str);
+    try testFile("test/data/rw_medium.json");
 }
 
 test "real world large" {
-    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, "test/data/rw_large.json", 1e8);
-    defer std.testing.allocator.free(str);
-    try testRound(str);
+    try testFile("test/data/rw_large.json");
 }

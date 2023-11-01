@@ -8,6 +8,8 @@ pub const BitPacker = bp.BitPacker(u16, u20, 9, 0);
 pub const sentinel_token = std.math.maxInt(BitPacker.ValueType);
 
 pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
+    if (data.len == 0) return BitPacker.init(allocator);
+
     const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1;
     var next_value: BitPacker.ValueType = first_allocated_token;
     var context = std.StringHashMap(BitPacker.ValueType).init(allocator);
@@ -56,9 +58,7 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
     return output;
 }
 
-test "json small, packed" {
-    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, "test/data/json_small.json", 1e8);
-    defer std.testing.allocator.free(str);
+fn testRound(str: []const u8) !void {
     var compressed = try compressPacked(str, std.testing.allocator);
     defer compressed.deinit();
     const unpacked = try compressed.unpackWithReset(std.testing.allocator, sentinel_token);
@@ -68,26 +68,62 @@ test "json small, packed" {
     try std.testing.expectEqualSlices(u8, str, decompressed.items);
 }
 
-test "real world medium, packed" {
-    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, "test/data/rw_medium.json", 1e8);
+fn testFile(path: []const u8) !void {
+    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, path, 1e8);
     defer std.testing.allocator.free(str);
-    var compressed = try compressPacked(str, std.testing.allocator);
-    defer compressed.deinit();
-    const unpacked = try compressed.unpackWithReset(std.testing.allocator, sentinel_token);
-    defer std.testing.allocator.free(unpacked);
-    const decompressed = try impl.decompress(BitPacker.ValueType, 0, sentinel_token, unpacked, std.testing.allocator);
-    defer decompressed.deinit();
-    try std.testing.expectEqualSlices(u8, str, decompressed.items);
+    try testRound(str);
 }
 
-test "real world large, packed" {
-    const str = try std.fs.cwd().readFileAlloc(std.testing.allocator, "test/data/rw_large.json", 1e8);
-    defer std.testing.allocator.free(str);
-    var compressed = try compressPacked(str, std.testing.allocator);
-    defer compressed.deinit();
-    const unpacked = try compressed.unpackWithReset(std.testing.allocator, sentinel_token);
-    defer std.testing.allocator.free(unpacked);
-    const decompressed = try impl.decompress(BitPacker.ValueType, 0, sentinel_token, unpacked, std.testing.allocator);
-    defer decompressed.deinit();
-    try std.testing.expectEqualSlices(u8, str, decompressed.items);
+test "basic" {
+    try testRound("");
+    try testRound("a");
+    try testRound("aa");
+    try testRound("aaa");
+}
+
+test "fuzzing" {
+    // Doesn't ensure that the string is valid UTF-8, but it should not matter.
+    // Note: In the future, use std.testing.random_seed. See https://github.com/ziglang/zig/issues/17609.
+    const seed = std.crypto.random.int(u64);
+    errdefer std.debug.print("\nFuzzing Test FAILED\n\tSeed: {d}\n", .{seed});
+    var rng = std.rand.DefaultPrng.init(seed);
+    for (0..10) |_| {
+        const length = rng.random().intRangeAtMost(usize, 0, 10_000_000); // Up to ~10MB
+        var str = try std.testing.allocator.alloc(u8, length);
+        defer std.testing.allocator.free(str);
+        rng.fill(str);
+        try testRound(str);
+    }
+}
+
+test "json 64KB" {
+    try testFile("test/data/64KB.json");
+}
+
+test "json 128KB" {
+    try testFile("test/data/128KB.json");
+}
+
+test "json 256KB" {
+    try testFile("test/data/256KB.json");
+}
+
+test "json 512KB" {
+    try testFile("test/data/512KB.json");
+}
+
+test "json 1MB" {
+    try testFile("test/data/1MB.json");
+}
+
+test "json 5MB" {
+    try testFile("test/data/5MB.json");
+}
+
+test "real world medium" {
+    try testFile("test/data/rw_medium.json");
+}
+
+test "real world large" {
+    try testFile("test/data/rw_large.json");
 }
