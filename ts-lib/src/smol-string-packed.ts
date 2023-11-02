@@ -1,4 +1,8 @@
-import { Uint16ArraytoString, copyToWasmBuffer } from "./common.js";
+import {
+	Uint16ArraytoString,
+	copyToWasmBuffer,
+	extractFooterU8,
+} from "./common.js";
 import init from "./module-packed.wasm?init";
 
 type exportsType = {
@@ -11,7 +15,7 @@ type exportsType = {
 		tokenCount: number
 	) => number;
 	free: (ptr: number, length: number) => void;
-	memory: any;
+	memory: WebAssembly.Memory;
 };
 
 const instance = await init();
@@ -67,26 +71,12 @@ export function decompressPacked(compressedStr: string) {
 
 	exports.free(ptrToCompressed, compressedStr.length - 2);
 
-	const footer = new Uint8Array(
-		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
-	);
-	const streamLength =
-		(footer.at(0)! << 24) +
-		(footer.at(1)! << 16) +
-		(footer.at(2)! << 8) +
-		footer.at(3)!;
-	const capacity =
-		(footer.at(4)! << 24) +
-		(footer.at(5)! << 16) +
-		(footer.at(6)! << 8) +
-		footer.at(7)!;
-	const start = ptrToFooter - streamLength;
-
-	const decompressed = new Uint8Array(
-		exports.memory.buffer.slice(start, ptrToFooter)
+	const { start, capacity, content } = extractFooterU8(
+		exports.memory,
+		ptrToFooter
 	);
 
-	const r = new TextDecoder().decode(decompressed);
+	const r = new TextDecoder().decode(content);
 
 	exports.free(start, capacity);
 

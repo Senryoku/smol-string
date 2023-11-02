@@ -1,4 +1,9 @@
-import { Uint16ArraytoString, copyToWasmBuffer } from "./common.js";
+import {
+	Uint16ArraytoString,
+	copyToWasmBuffer,
+	extractFooterU16,
+	extractFooterU8,
+} from "./common.js";
 import init from "./module.wasm?init";
 
 type exportsType = {
@@ -7,7 +12,7 @@ type exportsType = {
 	compress: (ptr: number, length: number) => number;
 	decompress: (ptr: number, length: number) => number;
 	free: (ptr: number, length: number) => void;
-	memory: any;
+	memory: WebAssembly.Memory;
 };
 
 const instance = await init();
@@ -20,18 +25,12 @@ export function compress(str: string) {
 
 	exports.free(ptr, length);
 
-	const footer = new Uint16Array(
-		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
-	);
-	const streamLength = (footer.at(0)! << 16) + footer.at(1)!;
-	const capacity = (footer.at(2)! << 16) + footer.at(3)!;
-	const start = ptrToFooter - 2 * streamLength;
-
-	const compressed = new Uint16Array(
-		exports.memory.buffer.slice(start, ptrToFooter)
+	const { start, capacity, content } = extractFooterU16(
+		exports.memory,
+		ptrToFooter
 	);
 
-	const r = Uint16ArraytoString(compressed);
+	const r = Uint16ArraytoString(content);
 
 	exports.free(start, capacity);
 
@@ -55,26 +54,12 @@ export function decompress(compressedStr: string) {
 
 	exports.free(ptrToCompressed, compressedStr.length);
 
-	const footer = new Uint8Array(
-		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
-	);
-	const streamLength =
-		(footer.at(0)! << 24) +
-		(footer.at(1)! << 16) +
-		(footer.at(2)! << 8) +
-		footer.at(3)!;
-	const capacity =
-		(footer.at(4)! << 24) +
-		(footer.at(5)! << 16) +
-		(footer.at(6)! << 8) +
-		footer.at(7)!;
-	const start = ptrToFooter - streamLength;
-
-	const decompressed = new Uint8Array(
-		exports.memory.buffer.slice(start, ptrToFooter)
+	const { start, capacity, content } = extractFooterU8(
+		exports.memory,
+		ptrToFooter
 	);
 
-	const r = new TextDecoder().decode(decompressed);
+	const r = new TextDecoder().decode(content);
 
 	exports.free(start, capacity);
 
