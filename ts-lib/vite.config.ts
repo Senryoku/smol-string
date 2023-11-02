@@ -3,6 +3,8 @@ import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import pkg from "./package.json" assert { type: "json" };
 
+import topLevelAwait from "vite-plugin-top-level-await";
+
 export default defineConfig({
 	build: {
 		lib: {
@@ -17,7 +19,7 @@ export default defineConfig({
 		},
 		rollupOptions: {
 			external: [
-				...Object.keys(pkg.dependencies), // don't bundle dependencies
+				...Object.keys(pkg["dependencies"] ?? {}), // don't bundle dependencies
 				/^node:.*/, // don't bundle built-in Node.js modules (use protocol imports!)
 			],
 		},
@@ -25,9 +27,23 @@ export default defineConfig({
 	},
 	worker: {
 		format: "es",
+		plugins: [
+			topLevelAwait({
+				// The export name of top-level await promise for each chunk module
+				promiseExportName: "__tla",
+				// The function to generate import names of top-level await promise in each chunk module
+				promiseImportName: (i) => `__tla_${i}`,
+			}),
+		],
 	},
 	plugins: [
 		dts(), // emit TS declaration files
+		topLevelAwait({
+			// The export name of top-level await promise for each chunk module
+			promiseExportName: "__tla",
+			// The function to generate import names of top-level await promise in each chunk module
+			promiseImportName: (i) => `__tla_${i}`,
+		}),
 	],
 	test: {},
 });
