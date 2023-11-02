@@ -15,23 +15,22 @@ const R = new S();
 let J = 0;
 const Q = {};
 R.onmessage = function(U) {
-  console.log("onmessage", U);
   const F = U.data.id;
   Q[F](U.data.data), delete Q[F];
 };
 async function Z(U) {
   const F = J++;
-  return console.log("compress", F), new Promise((B) => {
+  return new Promise((B) => {
     Q[F] = B, R.postMessage({ command: "compress", id: F, data: U });
   });
 }
 async function d(U) {
   const F = J++;
-  return console.log("decompress", F), new Promise((B) => {
+  return new Promise((B) => {
     Q[F] = B, R.postMessage({ command: "decompress", id: F, data: U });
   });
 }
 export {
-  Z as compress,
-  d as decompress
+  Z as compressPacked,
+  d as decompressPacked
 };

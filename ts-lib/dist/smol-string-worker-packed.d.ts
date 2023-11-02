@@ -1,2 +1,2 @@
-export declare function compress(data: string): Promise<unknown>;
-export declare function decompress(data: string): Promise<unknown>;
+export declare function compressPacked(data: string): Promise<unknown>;
+export declare function decompressPacked(data: string): Promise<unknown>;
