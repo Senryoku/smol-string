@@ -14,7 +14,7 @@ worker.onmessage = function (e: { data: { id: number; data: string } }) {
 
 export async function compress(data: string) {
 	const id = nextID++;
-	return new Promise((resolve) => {
+	return new Promise<string>((resolve) => {
 		resolver[id] = resolve;
 		worker.postMessage({ command: "compress", id, data });
 	});
@@ -22,7 +22,7 @@ export async function compress(data: string) {
 
 export async function decompress(data: string) {
 	const id = nextID++;
-	return new Promise((resolve) => {
+	return new Promise<string>((resolve) => {
 		resolver[id] = resolve;
 		worker.postMessage({ command: "decompress", id, data });
 	});
