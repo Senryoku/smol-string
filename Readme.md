@@ -1,10 +1,16 @@
 # smol-string
 
-`smol-string` is a compression library designed to be used with browsers' `localStorage` (and `sessionStorage`). It is intended to be a faster alternative to [`lz-string`](https://github.com/pieroxy/lz-string).
+`smol-string` is a compression library designed for use with browsers' `localStorage` (and `sessionStorage`). It serves as a faster alternative to [`lz-string`](https://github.com/pieroxy/lz-string).
 
-It is composed of the core algorithm written in [Zig](https://ziglang.org/) compiled to Wasm and a wrapper in the form of a Typescript library.
+The library is composed of a core algorithm written in [Zig](https://ziglang.org/) compiled to WebAssembly, along with a wrapper provided as a TypeScript library.
 
-I originally made sure it produced valid UTF-16 strings to ensure browser compatibility, however this doesn't seem to be necessary for any of the tested browsers. The default can now produce technically invalid UTF-16 strings. I might add back a way to limit it to valid UTF-16 if there's a need.
+Originally, I ensured that it produced valid UTF-16 strings to ensure browser compatibility. However, it now appears that this is not necessary for any of the tested browsers. The default behavior can now result in technically invalid UTF-16 strings.
+
+## Installation
+
+```
+npm install -S smol-string
+```
 
 ## Usage
 
@@ -39,10 +45,6 @@ import { compressPacked, decompressPacked } from "smol-string-worker-packed";
 const compressed = await compress(input);
 const decompressed = await decompress(compressed);
 ```
-
-## Todos
-
--   Integrate the run length at the start of the output stream instead of using a end sentinel?
 
 ## Build
 
