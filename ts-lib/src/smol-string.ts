@@ -1,8 +1,7 @@
 import {
 	Uint16ArraytoString,
 	copyToWasmBuffer,
-	extractFooterU16,
-	extractFooterU8,
+	extractFooter,
 } from "./common.js";
 import init from "./module.wasm?init";
 
@@ -25,11 +24,9 @@ export function compress(str: string) {
 
 	exports.free(ptr, length);
 
-	const { start, capacity, content } = extractFooterU16(
-		exports.memory,
-		ptrToFooter
-	);
+	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 
+	const content = new Uint16Array(exports.memory.buffer.slice(start, end));
 	const r = Uint16ArraytoString(content);
 
 	exports.free(start, capacity);
@@ -54,11 +51,8 @@ export function decompress(compressedStr: string) {
 
 	exports.free(ptrToCompressed, compressedStr.length);
 
-	const { start, capacity, content } = extractFooterU8(
-		exports.memory,
-		ptrToFooter
-	);
-
+	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
+	const content = new Uint8Array(exports.memory.buffer.slice(start, end));
 	const r = new TextDecoder().decode(content);
 
 	exports.free(start, capacity);

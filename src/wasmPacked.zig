@@ -23,15 +23,16 @@ export fn compressPacked(ptr: [*]u8, length: usize) i32 {
         return 0;
     };
 
-    const content_length = output.arr.items.len * 4 + 2; // In u16
-    output.arr.ensureTotalCapacity(output.arr.items.len + 2) catch {
+    const item_count = output.arr.items.len;
+    const content_length = item_count * 8 + 4; // In bytes
+    output.arr.ensureTotalCapacity(item_count + 2) catch {
         return 0;
     };
     // Token Count followed by the usual footer
     output.arr.appendAssumeCapacity((@as(u64, @intCast(content_length)) << 32) | output.size);
-    output.arr.appendAssumeCapacity((@as(u64, @intCast(output.arr.capacity * 2))));
+    output.arr.appendAssumeCapacity((@as(u64, @intCast(output.arr.capacity * 4))));
 
-    return @intCast(@intFromPtr(output.arr.items.ptr + output.arr.items.len - 2) + 4);
+    return @intCast(@intFromPtr(output.arr.items.ptr + item_count) + 4);
 }
 
 export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length: usize, token_count: usize) i32 {
@@ -52,7 +53,8 @@ export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length:
         return 0;
     };
 
-    const content_length = output.items.len;
+    const item_count = output.items.len;
+    const content_length = item_count;
     output.ensureTotalCapacity(output.items.len + 8) catch {
         return 0;
     };
@@ -65,5 +67,5 @@ export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length:
     output.appendAssumeCapacity(@intCast((output.capacity >> 16) & 0xFF));
     output.appendAssumeCapacity(@intCast((output.capacity >> 24) & 0xFF));
 
-    return @intCast(@intFromPtr(output.items.ptr + content_length));
+    return @intCast(@intFromPtr(output.items.ptr + item_count));
 }
