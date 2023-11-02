@@ -18,7 +18,7 @@ function s(I) {
     C,
     I.length
   );
-  A.free(C, I.length);
+  A.free(C, 2 * I.length);
   const { start: g, end: i, capacity: o } = G(A.memory, E), D = new Uint8Array(A.memory.buffer.slice(g, i)), w = new TextDecoder().decode(D);
   return A.free(g, o), w;
 }

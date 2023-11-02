@@ -49,7 +49,7 @@ export function decompress(compressedStr: string) {
 		compressedStr.length
 	);
 
-	exports.free(ptrToCompressed, compressedStr.length);
+	exports.free(ptrToCompressed, 2 * compressedStr.length);
 
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 	const content = new Uint8Array(exports.memory.buffer.slice(start, end));

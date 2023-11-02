@@ -61,7 +61,7 @@ export function decompressPacked(compressedStr: string) {
 		tokenCount
 	);
 
-	exports.free(ptrToCompressed, compressedStr.length - 2);
+	exports.free(ptrToCompressed, 2 * (compressedStr.length - 2));
 
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 	const content = new Uint8Array(exports.memory.buffer.slice(start, end));

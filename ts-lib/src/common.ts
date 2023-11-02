@@ -2,7 +2,7 @@ export function copyToWasmBuffer(
 	str: string,
 	exports: { allocUint8: (size: number) => number; memory: any }
 ) {
-	// There's also an 'encodeInto' method to avoid a copy, but by encoding first, we con allocate only exactly what we need.
+	// There's also an 'encodeInto' method to avoid a copy, but by encoding first, we can allocate only exactly what we need.
 	const utf8Str = new TextEncoder().encode(str);
 	const ptrToStr = exports.allocUint8(utf8Str.length);
 	const inBuffer = new Uint8Array(

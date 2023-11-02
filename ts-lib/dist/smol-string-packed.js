@@ -20,7 +20,7 @@ function y(A) {
     A.length - 2,
     g
   );
-  I.free(C, A.length - 2);
+  I.free(C, 2 * (A.length - 2));
   const { start: B, end: i, capacity: o } = k(I.memory, Q), F = new Uint8Array(I.memory.buffer.slice(B, i)), a = new TextDecoder().decode(F);
   return I.free(B, o), a;
 }
