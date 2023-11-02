@@ -1,6 +1,7 @@
 import {
 	Uint16ArraytoString,
 	copyToWasmBuffer,
+	extractFooterU16,
 	extractFooterU8,
 } from "./common.js";
 import init from "./module-packed.wasm?init";
@@ -28,18 +29,13 @@ export function compressPacked(str: string) {
 
 	exports.free(ptr, length);
 
-	const footer = new Uint16Array(
-		exports.memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
+	const { start, capacity, content } = extractFooterU16(
+		exports.memory,
+		ptrToFooter
 	);
-	// FIXME: Little endian while all the others are big endian...
-	const streamLength = (footer.at(1)! << 16) + footer.at(0)!;
-	const capacity = (footer.at(3)! << 16) + footer.at(2)!;
-	const start = ptrToFooter - 2 * streamLength;
 
 	// Includes the tokenCount at the end of the stream (2 * u16).
-	const compressed = new Uint16Array(
-		exports.memory.buffer.slice(start, ptrToFooter)
-	);
+	const compressed = new Uint16Array(content);
 
 	const r = Uint16ArraytoString(compressed);
 

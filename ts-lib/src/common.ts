@@ -31,15 +31,15 @@ export function extractFooterU8(
 		memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
 	const streamLength =
-		(footer.at(0)! << 24) +
-		(footer.at(1)! << 16) +
-		(footer.at(2)! << 8) +
-		footer.at(3)!;
+		(footer.at(0)! << 0) +
+		(footer.at(1)! << 8) +
+		(footer.at(2)! << 16) +
+		(footer.at(3)! << 24);
 	const capacity =
-		(footer.at(4)! << 24) +
-		(footer.at(5)! << 16) +
-		(footer.at(6)! << 8) +
-		footer.at(7)!;
+		(footer.at(4)! << 0) +
+		(footer.at(5)! << 8) +
+		(footer.at(6)! << 16) +
+		(footer.at(7)! << 24);
 	const start = ptrToFooter - streamLength;
 
 	const content = new Uint8Array(memory.buffer.slice(start, ptrToFooter));
@@ -58,8 +58,8 @@ export function extractFooterU16(
 	const footer = new Uint16Array(
 		memory.buffer.slice(ptrToFooter, ptrToFooter + 8)
 	);
-	const streamLength = (footer.at(0)! << 16) + footer.at(1)!;
-	const capacity = (footer.at(2)! << 16) + footer.at(3)!;
+	const streamLength = (footer.at(1)! << 16) + footer.at(0)!;
+	const capacity = (footer.at(3)! << 16) + footer.at(2)!;
 	const start = ptrToFooter - 2 * streamLength;
 	const content = new Uint16Array(memory.buffer.slice(start, ptrToFooter));
 

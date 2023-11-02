@@ -56,14 +56,14 @@ export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length:
     output.ensureTotalCapacity(output.items.len + 8) catch {
         return 0;
     };
-    output.appendAssumeCapacity(@intCast((content_length >> 24) & 0xFF));
-    output.appendAssumeCapacity(@intCast((content_length >> 16) & 0xFF));
-    output.appendAssumeCapacity(@intCast((content_length >> 8) & 0xFF));
     output.appendAssumeCapacity(@intCast((content_length >> 0) & 0xFF));
-    output.appendAssumeCapacity(@intCast((output.capacity >> 24) & 0xFF));
-    output.appendAssumeCapacity(@intCast((output.capacity >> 16) & 0xFF));
-    output.appendAssumeCapacity(@intCast((output.capacity >> 8) & 0xFF));
+    output.appendAssumeCapacity(@intCast((content_length >> 8) & 0xFF));
+    output.appendAssumeCapacity(@intCast((content_length >> 16) & 0xFF));
+    output.appendAssumeCapacity(@intCast((content_length >> 24) & 0xFF));
     output.appendAssumeCapacity(@intCast((output.capacity >> 0) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 8) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 16) & 0xFF));
+    output.appendAssumeCapacity(@intCast((output.capacity >> 24) & 0xFF));
 
     return @intCast(@intFromPtr(output.items.ptr + content_length));
 }
