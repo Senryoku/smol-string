@@ -41,8 +41,11 @@ ChartJS.defaults.borderColor = '#555'
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors)
 
-import { compress, decompress } from 'smol-string'
-import { compressPacked, decompressPacked } from 'smol-string/packed'
+// import { compress, decompress } from 'smol-string'
+// import { compressPacked, decompressPacked } from 'smol-string/packed'
+
+import { compress, decompress } from 'smol-string/worker'
+import { compressPacked, decompressPacked } from 'smol-string/worker/packed'
 
 // @ts-expect-error
 import LZString from '../../lz-string.min.js'
@@ -127,15 +130,15 @@ const chartDataSize = computed(() => {
   }
 })
 
-function test(
+async function test(
   method: string,
   file: string,
   testData: string,
-  compress: (str: string) => string,
-  decompress: (str: string) => string
+  compress: (str: string) => string | Promise<string>,
+  decompress: (str: string) => string | Promise<string>
 ) {
   const compressed_start = performance.now()
-  const compressed = compress(testData)
+  const compressed = await compress(testData)
   const compress_time = performance.now() - compressed_start
 
   localStorage.setItem('compressed', compressed)
@@ -143,7 +146,7 @@ function test(
   localStorage.removeItem('compressed')
 
   const decompressed_start = performance.now()
-  const decompressed = decompress(restored_compressed_string!)
+  const decompressed = await decompress(restored_compressed_string!)
   const decompress_time = performance.now() - decompressed_start
 
   results.value['compressed'][file][method] = compress_time
@@ -168,10 +171,10 @@ for (const { name, input } of usedTests) {
 }
 
 for (const { name, input } of usedTests) {
-  test('smol-string', name, input, compress, decompress)
-  test('smol-string-packed', name, input, compressPacked, decompressPacked)
-  test('LZString', name, input, LZString.compress, LZString.decompress)
-  test('LZString UTF-16', name, input, LZString.compressToUTF16, LZString.decompressFromUTF16)
+  await test('smol-string', name, input, compress, decompress)
+  await test('smol-string-packed', name, input, compressPacked, decompressPacked)
+  await test('LZString', name, input, LZString.compress, LZString.decompress)
+  await test('LZString UTF-16', name, input, LZString.compressToUTF16, LZString.decompressFromUTF16)
 }
 </script>
 
