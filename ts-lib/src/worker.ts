@@ -6,15 +6,15 @@ export type Message = {
 	data: string;
 };
 
-onmessage = async function (e: { data: Message }) {
+self.onmessage = function (e: { data: Message }) {
 	const { command, id, data } = e.data;
 	switch (command) {
 		case "decompress": {
-			postMessage({ id, data: decompress(data) });
+			self.postMessage({ id, data: decompress(data) });
 			break;
 		}
 		case "compress": {
-			postMessage({ id, data: compress(data) });
+			self.postMessage({ id, data: compress(data) });
 			break;
 		}
 	}
