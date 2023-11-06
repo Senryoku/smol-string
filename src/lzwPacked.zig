@@ -16,7 +16,7 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
     defer context.deinit();
     try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
-    var output = try BitPacker.initCapacity(allocator, data.len); // Note: We can safely allocate less.
+    var output = try BitPacker.initCapacity(allocator, data.len);
 
     var i: usize = 0;
     var curr_len: usize = 2;

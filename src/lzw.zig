@@ -9,7 +9,7 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
     defer context.deinit();
     try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
-    var output = try std.ArrayList(TokenType).initCapacity(allocator, data.len); // Note: We can safely allocate less.
+    var output = try std.ArrayList(TokenType).initCapacity(allocator, data.len);
 
     var i: usize = 0;
     var curr_len: usize = 2;
