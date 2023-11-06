@@ -7,8 +7,9 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
     var next_value: TokenType = first_allocated_token;
     var context = std.StringHashMap(TokenType).init(allocator);
     defer context.deinit();
+    try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
-    var output = try std.ArrayList(TokenType).initCapacity(allocator, data.len);
+    var output = try std.ArrayList(TokenType).initCapacity(allocator, data.len); // Note: We can safely allocate less.
 
     var i: usize = 0;
     var curr_len: usize = 2;
@@ -16,7 +17,7 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
         const str = data[i .. i + curr_len];
         const value = context.get(str);
         if (value == null) {
-            try context.put(str, next_value);
+            context.putAssumeCapacity(str, next_value);
             next_value += 1;
             output.appendAssumeCapacity(if (str.len == 2) (@as(TokenType, @intCast(str[0])) + reserved_codepoints) else context.get(str[0 .. str.len - 1]).?);
 
