@@ -6,9 +6,9 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
     return struct {
         arr: std.ArrayList(UnderlyingType),
 
-        size: usize,
-        size_since_reset: usize,
-        value_size: u8,
+        size: usize = 0,
+        size_since_reset: usize = 0,
+        value_size: u8 = initial_bit_size,
         bit: u8 = reserved_bits, // Current bit position
 
         const Self = @This();
@@ -20,21 +20,19 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
         }
 
         pub fn init(allocator: std.mem.Allocator) !@This() {
-            return @This(){
+            var r = @This(){
                 .arr = std.ArrayList(UnderlyingType).init(allocator),
-                .size = 0,
-                .size_since_reset = 0,
-                .value_size = initial_bit_size,
             };
+            try r.arr.append(0);
+            return r;
         }
 
         pub fn initCapacity(allocator: std.mem.Allocator, initial_capacity: usize) !@This() {
-            return @This(){
+            var r = @This(){
                 .arr = try std.ArrayList(UnderlyingType).initCapacity(allocator, initial_capacity),
-                .size = 0,
-                .size_since_reset = 0,
-                .value_size = initial_bit_size,
             };
+            try r.arr.append(0);
+            return r;
         }
 
         // FIXME: This should return a const version of @This()
@@ -87,7 +85,7 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
 
             var remaining_bits = self.value_size;
             while (remaining_bits > 0) {
-                if (self.bit == @bitSizeOf(UnderlyingType) or self.arr.items.len == 0) {
+                if (self.bit == @bitSizeOf(UnderlyingType)) {
                     try self.arr.append(0);
                     self.bit = reserved_bits;
                 }
