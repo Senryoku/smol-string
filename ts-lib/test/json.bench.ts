@@ -9,19 +9,19 @@ import {
 	decompressPacked,
 } from "../dist/smol-string-packed.js";
 
-const options = { iterations: 5 };
+const options = { iterations: 20 };
 
 describe.each(TestData)("Compression: $name", ({ name, input }) => {
 	bench(
 		"compress",
-		async () => {
+		() => {
 			compress(input);
 		},
 		options
 	);
 	bench(
 		"compressPacked",
-		async () => {
+		() => {
 			compressPacked(input);
 		},
 		options
@@ -34,7 +34,7 @@ describe.each(TestData)("Decompression: $name", ({ name, input }) => {
 
 	bench(
 		"decompress",
-		async () => {
+		() => {
 			const decompressed = decompress(compressed);
 			expect(decompressed).toBe(input);
 		},
@@ -42,7 +42,7 @@ describe.each(TestData)("Decompression: $name", ({ name, input }) => {
 	);
 	bench(
 		"decompressPacked",
-		async () => {
+		() => {
 			const decompressed = decompressPacked(compressedPacked);
 			expect(decompressed).toBe(input);
 		},
