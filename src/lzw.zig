@@ -13,13 +13,14 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
 
     var i: usize = 0;
     var curr_len: usize = 2;
+    var prev_value: ?TokenType = null;
     while (i + curr_len < data.len) {
         const str = data[i .. i + curr_len];
         const value = context.get(str);
         if (value == null) {
             context.putAssumeCapacity(str, next_value);
             next_value += 1;
-            output.appendAssumeCapacity(if (str.len == 2) (@as(TokenType, @intCast(str[0])) + reserved_codepoints) else context.get(str[0 .. str.len - 1]).?);
+            output.appendAssumeCapacity(if (str.len == 2) (@as(TokenType, @intCast(str[0])) + reserved_codepoints) else prev_value.?);
 
             i += curr_len - 1;
             curr_len = 2;
@@ -32,7 +33,10 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
                 output.appendAssumeCapacity(sentinel_token);
                 continue;
             }
-        } else curr_len += 1;
+        } else {
+            curr_len += 1;
+            prev_value = value;
+        }
     }
 
     // Handle the last unencoded bytes.
