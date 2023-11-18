@@ -42,7 +42,7 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
 
                 next_value = first_allocated_token;
             } else {
-                context.putAssumeCapacity(str, next_value);
+                context.putAssumeCapacityNoClobber(str, next_value);
                 next_value += 1;
             }
         } else {

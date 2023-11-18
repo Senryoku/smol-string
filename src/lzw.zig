@@ -31,7 +31,7 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
                 next_value = first_allocated_token;
                 continue;
             } else {
-                context.putAssumeCapacity(str, next_value);
+                context.putAssumeCapacityNoClobber(str, next_value);
                 next_value += 1;
             }
         } else {

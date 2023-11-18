@@ -93,28 +93,37 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
             std.debug.assert(self.value_size <= @bitSizeOf(ValueType));
             std.debug.assert(self.value_size == @bitSizeOf(ValueType) or (value >> @intCast(self.value_size)) == 0);
 
-            var remaining_bits = self.value_size;
-            while (remaining_bits > 0) {
-                if (self.bit == @bitSizeOf(UnderlyingType)) {
-                    self.arr.appendAssumeCapacity(0);
-                    self.bit = reserved_bits;
-                }
-
-                const to_write = @min(remaining_bits, @bitSizeOf(UnderlyingType) - self.bit);
-
-                // FIXME: This can probably be simplified
-                if (comptime (@bitSizeOf(ValueType) < @bitSizeOf(UnderlyingType))) {
-                    var shifted: UnderlyingType = @as(UnderlyingType, @intCast(value)) << @intCast(@bitSizeOf(UnderlyingType) - remaining_bits); // "Mask" high bits
-                    shifted >>= @intCast(self.bit);
-                    self.arr.items[self.arr.items.len - 1] |= shifted;
+            // We know a value cannot span more than two underlying items.
+            if (comptime (@bitSizeOf(ValueType) <= @bitSizeOf(UnderlyingType) - reserved_bits)) {
+                const available_bits = @bitSizeOf(UnderlyingType) - self.bit;
+                if (self.value_size <= available_bits) {
+                    self.arr.items[self.arr.items.len - 1] |= @as(UnderlyingType, @intCast(value)) << @truncate(@bitSizeOf(UnderlyingType) - (self.value_size + self.bit));
+                    self.bit += self.value_size;
                 } else {
+                    if (available_bits > 0)
+                        self.arr.items[self.arr.items.len - 1] |= value >> @intCast(self.value_size - available_bits);
+                    const shifted = @as(UnderlyingType, @intCast(value)) << @intCast(@bitSizeOf(UnderlyingType) - (self.value_size - available_bits));
+                    self.arr.appendAssumeCapacity(shifted >> reserved_bits);
+                    self.bit = reserved_bits + self.value_size - available_bits;
+                }
+            } else {
+                var remaining_bits = self.value_size;
+                while (remaining_bits > 0) {
+                    if (self.bit == @bitSizeOf(UnderlyingType)) {
+                        self.arr.appendAssumeCapacity(0);
+                        self.bit = reserved_bits;
+                    }
+
+                    const to_write = @min(remaining_bits, @bitSizeOf(UnderlyingType) - self.bit);
+
                     var shifted: ValueType = value << @intCast(@bitSizeOf(ValueType) - remaining_bits); // "Mask" high bits
                     shifted >>= @intCast(self.bit + (@bitSizeOf(ValueType) - @bitSizeOf(UnderlyingType)));
                     self.arr.items[self.arr.items.len - 1] |= @intCast(shifted);
-                }
-                remaining_bits -= to_write;
 
-                self.bit += to_write;
+                    remaining_bits -= to_write;
+
+                    self.bit += to_write;
+                }
             }
 
             self.size += 1;
