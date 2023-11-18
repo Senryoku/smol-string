@@ -18,20 +18,21 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
         const str = data[i .. i + curr_len];
         const value = context.get(str);
         if (value == null) {
-            context.putAssumeCapacity(str, next_value);
-            next_value += 1;
             output.appendAssumeCapacity(if (str.len == 2) (@as(TokenType, @intCast(str[0])) + reserved_codepoints) else prev_value.?);
 
             i += curr_len - 1;
             curr_len = 2;
 
-            if (next_value == sentinel_token + 1) {
+            if (next_value == sentinel_token) {
                 // Restart compression from here with a fresh context
                 context.clearRetainingCapacity();
-                next_value = first_allocated_token;
                 // Insert special token. We can use next_value since it will never be used as currently written.
                 output.appendAssumeCapacity(sentinel_token);
+                next_value = first_allocated_token;
                 continue;
+            } else {
+                context.putAssumeCapacity(str, next_value);
+                next_value += 1;
             }
         } else {
             curr_len += 1;

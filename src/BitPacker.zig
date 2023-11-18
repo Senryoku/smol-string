@@ -79,6 +79,13 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
         }
 
         pub fn append(self: *@This(), value: ValueType) !void {
+            // We're being conservative here. Prefer using appendAssumeCapacity directly.
+            if (self.bit + self.value_size + 1 >= @bitSizeOf(UnderlyingType))
+                try self.arr.ensureTotalCapacity(self.arr.items.len + 1);
+            self.appendAssumeCapacity(value);
+        }
+
+        pub fn appendAssumeCapacity(self: *@This(), value: ValueType) void {
             if (self.value_size < @bitSizeOf(ValueType) and self.size_since_reset + (comptime std.math.pow(usize, 2, @max(0, initial_bit_size - 1))) >= (@as(u32, 1) << @intCast(self.value_size)) - 1) {
                 self.value_size += 1;
             }
@@ -89,7 +96,7 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
             var remaining_bits = self.value_size;
             while (remaining_bits > 0) {
                 if (self.bit == @bitSizeOf(UnderlyingType)) {
-                    try self.arr.append(0);
+                    self.arr.appendAssumeCapacity(0);
                     self.bit = reserved_bits;
                 }
 

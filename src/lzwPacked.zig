@@ -25,9 +25,7 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
         const str = data[i .. i + curr_len];
         const value = context.get(str);
         if (value == null) {
-            context.putAssumeCapacity(str, next_value);
-            next_value += 1;
-            try output.append(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
+            output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
 
             i += curr_len - 1;
             curr_len = 2;
@@ -36,10 +34,16 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
                 // Restart compression from here with a fresh context
                 context.clearRetainingCapacity();
                 // Insert special token. We can use next_value since it will never be used as currently written.
-                try output.append(next_value);
+                output.appendAssumeCapacity(sentinel_token);
+
+                // Here's the only reason to have a completely different implementation, rather than a generic one.
+                // FIXME: Can we do better?
                 output.resetValueSize();
+
                 next_value = first_allocated_token;
-                continue;
+            } else {
+                context.putAssumeCapacity(str, next_value);
+                next_value += 1;
             }
         } else {
             curr_len += 1;
@@ -49,14 +53,14 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
 
     // Handle the last unencoded bytes.
     if (i + 1 >= data.len) {
-        try output.append(@intCast(data[i]));
+        output.appendAssumeCapacity(@intCast(data[i]));
     } else {
         const value = context.get(data[i .. i + curr_len]);
         if (value == null) {
-            try output.append(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i]))) else context.get(data[i .. i + curr_len - 1]).?);
-            try output.append(@intCast(data[i + curr_len - 1]));
+            output.appendAssumeCapacity(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i]))) else context.get(data[i .. i + curr_len - 1]).?);
+            output.appendAssumeCapacity(@intCast(data[i + curr_len - 1]));
         } else {
-            try output.append(value.?);
+            output.appendAssumeCapacity(value.?);
         }
     }
 
