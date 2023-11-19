@@ -155,12 +155,13 @@ async function test(
   results.value['success'][file][method] = testData === decompressed
 }
 
-import { json_512kb, json_1mb, rw_medium } from '../../../ts-lib/test/common'
+import { json_512kb, json_1mb, rw_medium, rw_large } from '../../../ts-lib/test/common'
 
 const usedTests = [
   { name: 'json_512kb', input: JSON.stringify(await json_512kb) },
   { name: 'json_1mb', input: JSON.stringify(await json_1mb) },
-  { name: 'rw_medium', input: JSON.stringify(await rw_medium) }
+  { name: 'rw_medium', input: JSON.stringify(await rw_medium) },
+  { name: 'rw_large', input: JSON.stringify(await rw_large) }
 ]
 
 for (const { name, input } of usedTests) {
