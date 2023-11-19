@@ -1,11 +1,13 @@
 const std = @import("std");
 
+const Context = @import("Context.zig");
+
 pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const u8, allocator: std.mem.Allocator) !std.ArrayList(TokenType) {
     if (data.len == 0) return std.ArrayList(TokenType).init(allocator);
 
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
     var next_value: TokenType = first_allocated_token;
-    var context = std.StringHashMap(TokenType).init(allocator);
+    var context = Context.HashMap(TokenType).init(allocator);
     defer context.deinit();
     try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 

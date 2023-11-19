@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const Context = @import("Context.zig");
 const bp = @import("./BitPacker.zig");
 
 const impl = @import("lzw.zig");
@@ -12,7 +13,7 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
 
     const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1;
     var next_value: BitPacker.ValueType = first_allocated_token;
-    var context = std.StringHashMap(BitPacker.ValueType).init(allocator);
+    var context = Context.HashMap(BitPacker.ValueType).init(allocator);
     defer context.deinit();
     try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
