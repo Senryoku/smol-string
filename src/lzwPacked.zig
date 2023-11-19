@@ -15,7 +15,6 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
     var next_value: BitPacker.ValueType = first_allocated_token;
     var context = Context.HashMap(BitPacker.ValueType).init(allocator);
     defer context.deinit();
-    try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
     var output = try BitPacker.initCapacity(allocator, data.len);
 
@@ -43,7 +42,7 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
 
                 next_value = first_allocated_token;
             } else {
-                context.putAssumeCapacityNoClobber(str, next_value);
+                try context.putNoClobber(str, next_value);
                 next_value += 1;
             }
         } else {
