@@ -76,4 +76,17 @@ pub fn build(b: *std.Build) void {
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
+
+    const profile = b.addExecutable(.{
+        .name = "profile",
+        .root_source_file = .{ .path = "src/profile.zig" },
+        .target = target,
+        .optimize = .Debug,
+    });
+    b.installArtifact(profile);
+
+    const run_profile = b.addRunArtifact(profile);
+
+    const run_profile_step = b.step("run_profile", "Run the profile executable");
+    run_profile_step.dependOn(&run_profile.step);
 }
