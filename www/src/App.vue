@@ -10,6 +10,9 @@ import { RouterLink, RouterView } from 'vue-router'
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/bench">Benchmarks</RouterLink>
         <RouterLink to="/docs">Documentation</RouterLink>
+        <div style="flex-grow: 1"></div>
+        <a href="https://github.com/Senryoku/smol-string">GitHub</a>
+        <a href="https://www.npmjs.com/package/smol-string">npm</a>
       </nav>
     </header>
     <div>
