@@ -1,1 +1,0 @@
-import{g as e,o,c as n,b as t}from"./index-c61ad54f.js";const s={},c=t("h2",null,"Documentation",-1),r=t("div",null,[t("a",{href:"https://github.com/Senryoku/smol-string"},"GitHub Repository")],-1),i=[c,r];function a(_,l){return o(),n("div",null,i)}const d=e(s,[["render",a]]);export{d as default};

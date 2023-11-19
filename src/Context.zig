@@ -12,5 +12,5 @@ pub const StringContext = struct {
 };
 
 pub fn HashMap(comptime V: type) type {
-    return std.HashMap([]const u8, V, StringContext, 50);
+    return std.HashMap([]const u8, V, StringContext, 80);
 }

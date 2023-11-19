@@ -27,7 +27,7 @@ describe.each(TestData)("Compression: $name", ({ name, input }) => {
 		options
 	);
 });
-
+/*
 describe.each(TestData)("Decompression: $name", ({ name, input }) => {
 	let compressed = compress(input);
 	let compressedPacked = compressPacked(input);
@@ -49,3 +49,4 @@ describe.each(TestData)("Decompression: $name", ({ name, input }) => {
 		options
 	);
 });
+*/
