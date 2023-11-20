@@ -18,7 +18,7 @@ import {
 	decompressPacked as npmDecompressPacked,
 } from "smol-string/packed";
 
-const options = { iterations: 20 };
+const options = { iterations: 10, timeout: 100000 };
 
 describe.each(TestData)("Compression: $name", ({ name, input }) => {
 	bench(

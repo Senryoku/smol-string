@@ -8,7 +8,7 @@
         alternative to <a href="https://github.com/pieroxy/lz-string" target="_blank">lz-string</a>.
       </p>
 
-      <p>Run the <a href="/bench">benchmarks</a> directly in your browser.</p>
+      <p>Run the <RouterLink to="/bench">Benchmarks</RouterLink> directly in your browser.</p>
 
       <p>
         More information on the
