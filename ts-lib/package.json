@@ -52,7 +52,7 @@
 	},
 	"devDependencies": {
 		"@vitest/browser": "^0.34.6",
-		"smol-string": "^0.0.2-beta",
+		"smol-string": "^0.1.0-beta",
 		"typescript": "^5.2.2",
 		"vite": "^5.0.0",
 		"vite-plugin-dts": "^3.6.2",
