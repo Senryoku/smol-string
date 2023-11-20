@@ -1,0 +1,45 @@
+name: Generate a www build and push to gh-page
+
+permissions: write-all
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Push
+    steps:
+      - name: git-checkout
+        uses: actions/checkout@v4
+
+      - name: ts-lib/Install all dependencies
+        working-directory: ./ts-lib
+        run: npm ci
+
+      - name: ts-lib/Build
+        working-directory: ./ts-lib
+        run: npm run build
+
+      - name: www/Install all dependencies
+        working-directory: ./www
+        run: npm i
+
+      - name: www/Build
+        working-directory: ./www
+        run: npm run build
+
+      - name: Copy index.html to 404.html
+        working-directory: ./www
+        run: cp dist/index.html dist/404.html
+    
+      - name: Push
+        uses: s0/git-publish-subdir-action@develop
+        env:
+          REPO: self
+          BRANCH: gh-pages
+          FOLDER: www/dist
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MESSAGE: "Build: ({sha}) {msg}"
