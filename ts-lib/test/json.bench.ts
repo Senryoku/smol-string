@@ -9,6 +9,15 @@ import {
 	decompressPacked,
 } from "../dist/smol-string-packed.js";
 
+import {
+	compress as npmCompress,
+	decompress as npmDecompress,
+} from "smol-string";
+import {
+	compressPacked as npmCompressPacked,
+	decompressPacked as npmDecompressPacked,
+} from "smol-string/packed";
+
 const options = { iterations: 20 };
 
 describe.each(TestData)("Compression: $name", ({ name, input }) => {
@@ -20,17 +29,33 @@ describe.each(TestData)("Compression: $name", ({ name, input }) => {
 		options
 	);
 	bench(
+		"npm compress",
+		() => {
+			npmCompress(input);
+		},
+		options
+	);
+});
+
+describe.each(TestData)("Compression (Packed): $name", ({ name, input }) => {
+	bench(
 		"compressPacked",
 		() => {
 			compressPacked(input);
 		},
 		options
 	);
+	bench(
+		"npm compressPacked",
+		() => {
+			npmCompressPacked(input);
+		},
+		options
+	);
 });
-/*
+
 describe.each(TestData)("Decompression: $name", ({ name, input }) => {
-	let compressed = compress(input);
-	let compressedPacked = compressPacked(input);
+	const compressed = compress(input);
 
 	bench(
 		"decompress",
@@ -41,6 +66,19 @@ describe.each(TestData)("Decompression: $name", ({ name, input }) => {
 		options
 	);
 	bench(
+		"npm decompress",
+		() => {
+			const decompressed = npmDecompress(compressed);
+			expect(decompressed).toBe(input);
+		},
+		options
+	);
+});
+
+describe.each(TestData)("Decompression (Packed): $name", ({ name, input }) => {
+	const compressedPacked = compressPacked(input);
+
+	bench(
 		"decompressPacked",
 		() => {
 			const decompressed = decompressPacked(compressedPacked);
@@ -48,5 +86,12 @@ describe.each(TestData)("Decompression: $name", ({ name, input }) => {
 		},
 		options
 	);
+	bench(
+		"npm decompressPacked",
+		() => {
+			const decompressed = npmDecompressPacked(compressedPacked);
+			expect(decompressed).toBe(input);
+		},
+		options
+	);
 });
-*/
