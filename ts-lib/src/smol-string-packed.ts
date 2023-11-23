@@ -28,11 +28,9 @@ export function compressPacked(str: string) {
 
 	exports.free(ptr, length);
 
-	//console.log(ptrToFooter);
+	if (ptrToFooter < 0) throw new Error("Error compressing string.");
 
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
-
-	//console.log(start, end, capacity / (1024 * 1024));
 
 	// Includes the tokenCount at the end of the stream (2 * u16).
 	const compressed = new Uint16Array(exports.memory.buffer.slice(start, end));
@@ -66,6 +64,8 @@ export function decompressPacked(compressedStr: string) {
 	);
 
 	exports.free(ptrToCompressed, 2 * (compressedStr.length - 2));
+
+	if (ptrToFooter < 0) throw new Error("Error decompressing string.");
 
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 	const content = new Uint8Array(exports.memory.buffer.slice(start, end));

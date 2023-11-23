@@ -20,13 +20,13 @@ export fn compressPacked(ptr: [*]u8, length: usize) i32 {
     const allocator = std.heap.page_allocator;
     const data: []const u8 = ptr[0..length];
     var output = packed_impl.compressPacked(data, allocator) catch {
-        return 0;
+        return -1;
     };
 
     const item_count = output.arr.items.len;
     const content_length: u64 = item_count * @sizeOf(packed_impl.BitPacker.UnderlyingType) + @sizeOf(u32); // In bytes. Compressed stream followed by the token count.
     output.arr.ensureTotalCapacity(item_count + 2) catch {
-        return 0;
+        return -1;
     };
     // Token Count followed by the usual footer
     output.arr.appendAssumeCapacity((@as(u64, @intCast(content_length)) << @bitSizeOf(usize)) | output.size);
@@ -40,23 +40,23 @@ export fn decompressPacked(ptr: [*]packed_impl.BitPacker.UnderlyingType, length:
     const data: []packed_impl.BitPacker.UnderlyingType = ptr[0..length];
 
     const packedData = packed_impl.BitPacker.fromSlice(allocator, data, token_count) catch {
-        return 0;
+        return -1;
     };
     // Note: Although the BitPacker (or rather, the Array under the BitPacker) technically takes ownership of the slice here,
     //       we still won't deinit it here and leave the responsibility to the caller to keep the consistency with other APIs.
 
     const unpackedData = packedData.unpackWithReset(allocator, packed_impl.sentinel_token) catch {
-        return 0;
+        return -1;
     };
 
     var output = impl.decompress(packed_impl.BitPacker.ValueType, 0, packed_impl.sentinel_token, unpackedData, allocator) catch {
-        return 0;
+        return -1;
     };
 
     const item_count = output.items.len;
     const content_length = item_count;
     output.ensureTotalCapacity(output.items.len + 2 * @sizeOf(usize)) catch {
-        return 0;
+        return -1;
     };
     output.appendAssumeCapacity(@intCast((content_length >> 0) & 0xFF));
     output.appendAssumeCapacity(@intCast((content_length >> 8) & 0xFF));

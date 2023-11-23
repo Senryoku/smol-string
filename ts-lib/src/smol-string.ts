@@ -24,6 +24,8 @@ export function compress(str: string) {
 
 	exports.free(ptr, length);
 
+	if (ptrToFooter < 0) throw new Error("Error compressing string.");
+
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 
 	const content = new Uint16Array(exports.memory.buffer.slice(start, end));
@@ -50,6 +52,8 @@ export function decompress(compressedStr: string) {
 	);
 
 	exports.free(ptrToCompressed, 2 * compressedStr.length);
+
+	if (ptrToFooter < 0) throw new Error("Error decompressing string.");
 
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 	const content = new Uint8Array(exports.memory.buffer.slice(start, end));
