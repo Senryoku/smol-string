@@ -156,7 +156,7 @@ test "fuzzing" {
     var rng = std.rand.DefaultPrng.init(seed);
     for (0..10) |_| {
         const length = rng.random().intRangeAtMost(usize, 0, 10_000_000); // Up to ~10MB
-        var str = try std.testing.allocator.alloc(u8, length);
+        const str = try std.testing.allocator.alloc(u8, length);
         defer std.testing.allocator.free(str);
         rng.fill(str);
         try testRound(str);
