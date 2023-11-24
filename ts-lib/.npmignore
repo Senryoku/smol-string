@@ -1,1 +1,5 @@
 test
+src
+tsconfig.json
+vite.config.ts
+browser.vitest.config.ts
