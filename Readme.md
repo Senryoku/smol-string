@@ -23,24 +23,10 @@ const compressed = compress(input);
 const decompressed = decompress(compressed);
 ```
 
-The default `compress`/`decompress` are optimized for speed and produce bigger output.
-`smol-string` also provide a bit packed version which yield compressed sizes similar to `lz-string`, while still being faster:
-
-```ts
-import { compressPacked, decompressPacked } from "smol-string/packed";
-
-const compressed = compressPacked(input);
-const decompressed = decompressPacked(compressed);
-```
-
-Each version is distributed as a separate package to reduce bundle size. You don't want to mix them anyway.
-
-Finally, there's an async version offloading the processing to a webworker. API is identical, expect that each function returns a promise:
+An async version offloading the processing to a webworker is also available. API is identical, expect that each function returns a promise:
 
 ```ts
 import { compress, decompress } from "smol-string/worker";
-// Or
-import { compressPacked, decompressPacked } from "smol-string/worker/packed";
 
 const compressed = await compress(input);
 const decompressed = await decompress(compressed);
