@@ -44,11 +44,7 @@ export fn decompress(ptr: [*]impl.BitPacker.UnderlyingType, length: usize, token
     // Note: Although the BitPacker (or rather, the Array under the BitPacker) technically takes ownership of the slice here,
     //       we still won't deinit it here and leave the responsibility to the caller to keep the consistency with other APIs.
 
-    const unpackedData = packedData.unpackWithReset(allocator, std.math.maxInt(impl.BitPacker.ValueType)) catch {
-        return -1;
-    };
-
-    var output = impl.decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpackedData, allocator) catch {
+    var output = impl.decompress(packedData, allocator) catch {
         return -1;
     };
 

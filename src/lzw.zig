@@ -5,12 +5,16 @@ const bp = @import("./BitPacker.zig");
 
 const impl = @import("lzw.zig");
 
+// Note: We could make all of these configurable, to add a UTF-16 version of the API for example.
+//       This doesn't seem useful right now, but keeping it clear doesn't cost anything.
 pub const BitPacker = bp.BitPacker(u64, u20, 9, 0);
+const reserved_codepoints = 0;
+const sentinel_token = std.math.maxInt(BitPacker.ValueType);
 
 pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
     if (data.len == 0) return BitPacker.init(allocator);
 
-    const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1;
+    const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
     var next_value: BitPacker.ValueType = first_allocated_token;
     var context = Context.HashMap(BitPacker.ValueType).init(allocator);
     defer context.deinit();
@@ -28,15 +32,15 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
         const str = data[i .. i + curr_len];
         const value = context.get(str);
         if (value == null) {
-            output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
+            output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0])) + reserved_codepoints) else prev_value.?);
             max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(curr_len - 1)));
 
-            if (next_value == std.math.maxInt(BitPacker.ValueType)) {
+            if (next_value == sentinel_token) {
                 // Restart compression from here with a fresh context
                 context.clearRetainingCapacity();
                 @memset(&max_length, 2);
                 // Insert special token signifying a context reset for decompression.
-                output.appendAssumeCapacity(std.math.maxInt(BitPacker.ValueType));
+                output.appendAssumeCapacity(sentinel_token);
 
                 output.resetValueSize();
 
@@ -67,12 +71,12 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
 
     // Handle the last unencoded bytes.
     if (i + 1 >= data.len) {
-        output.appendAssumeCapacity(@intCast(data[i]));
+        output.appendAssumeCapacity(@intCast(data[i] + reserved_codepoints));
     } else {
         const value = context.get(data[i .. i + curr_len]);
         if (value == null) {
-            output.appendAssumeCapacity(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i]))) else context.get(data[i .. i + curr_len - 1]).?);
-            output.appendAssumeCapacity(@intCast(data[i + curr_len - 1]));
+            output.appendAssumeCapacity(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i] + reserved_codepoints))) else context.get(data[i .. i + curr_len - 1]).?);
+            output.appendAssumeCapacity(@intCast(data[i + curr_len - 1] + reserved_codepoints));
         } else {
             output.appendAssumeCapacity(value.?);
         }
@@ -81,39 +85,40 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
     return output;
 }
 
-pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, allocator: std.mem.Allocator) !std.ArrayList(u8) {
-    if (data.len == 0) return std.ArrayList(u8).init(allocator);
+pub fn decompress(data: BitPacker, allocator: std.mem.Allocator) !std.ArrayList(u8) {
+    if (data.size == 0) return std.ArrayList(u8).init(allocator);
 
-    const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
-    var next_value: TokenType = first_allocated_token;
+    const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
+    var next_value: BitPacker.ValueType = first_allocated_token;
     var context = std.ArrayList(?[]u8).init(allocator);
     defer context.deinit();
-    try context.ensureTotalCapacity(std.math.maxInt(TokenType));
-    context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
+    try context.ensureTotalCapacity(sentinel_token);
+    context.appendNTimesAssumeCapacity(null, sentinel_token);
 
     // FIXME: We need to make sure pointers to that buffer will be stable for the slices in context to stay valid.
-    var output = try std.ArrayList(u8).initCapacity(allocator, 24 * data.len);
-    output.appendAssumeCapacity(@intCast(data[0] - reserved_codepoints));
-
-    context.items[data[0]] = output.items[0..1];
+    var output = try std.ArrayList(u8).initCapacity(allocator, 24 * data.size);
 
     var prev_start: usize = 0;
-    var i: usize = 1;
-    while (i < data.len) {
-        const v = data[i];
 
+    var it = data.iterator();
+
+    const first_token = it.next().?;
+    output.appendAssumeCapacity(@intCast(first_token - reserved_codepoints));
+    context.items[first_token] = output.items[0..1];
+
+    while (it.next()) |v| {
         // Special reset token
         if (v == sentinel_token) {
-            i += 1; // Skip special token
-            if (i >= data.len) break;
+            it.resetValueSize();
+            const next_token = it.next(); // Skip special token
+            if (next_token == null) break;
             // Reinitialize state
             next_value = first_allocated_token;
             context.clearRetainingCapacity();
-            context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
+            context.appendNTimesAssumeCapacity(null, sentinel_token);
             prev_start = output.items.len;
-            try std.testing.expect(data[i] < first_allocated_token);
-            output.appendAssumeCapacity(@intCast(data[i] - reserved_codepoints));
-            i += 1;
+            try std.testing.expect(next_token.? < first_allocated_token);
+            output.appendAssumeCapacity(@intCast(next_token.? - reserved_codepoints));
             continue;
         }
 
@@ -138,8 +143,6 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
         next_value += 1;
 
         prev_start = new_start;
-
-        i += 1;
     }
 
     return output;
@@ -148,9 +151,7 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
 fn testRound(str: []const u8) !void {
     var compressed = try compress(str, std.testing.allocator);
     defer compressed.deinit();
-    const unpacked_data = try compressed.unpackWithReset(std.testing.allocator, std.math.maxInt(impl.BitPacker.ValueType));
-    defer std.testing.allocator.free(unpacked_data);
-    const decompressed = try decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpacked_data, std.testing.allocator);
+    const decompressed = try decompress(compressed, std.testing.allocator);
     defer decompressed.deinit();
     try std.testing.expectEqualSlices(u8, str, decompressed.items);
 }
