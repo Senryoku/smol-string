@@ -81,7 +81,7 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
     return output;
 }
 
-pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, allocator: std.mem.Allocator) !std.ArrayList(u8) {
+pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, expected_output_size: usize, allocator: std.mem.Allocator) !std.ArrayList(u8) {
     if (data.len == 0) return std.ArrayList(u8).init(allocator);
 
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
@@ -91,8 +91,8 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
     try context.ensureTotalCapacity(std.math.maxInt(TokenType));
     context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
 
-    // FIXME: We need to make sure pointers to that buffer will be stable for the slices in context to stay valid.
-    var output = try std.ArrayList(u8).initCapacity(allocator, 24 * data.len);
+    // FIXME: Why *4? Because benchmarks are 10% slower without it. I have no idea why.
+    var output = try std.ArrayList(u8).initCapacity(allocator, 4 * expected_output_size);
     output.appendAssumeCapacity(@intCast(data[0] - reserved_codepoints));
 
     context.items[data[0]] = output.items[0..1];
@@ -150,7 +150,7 @@ fn testRound(str: []const u8) !void {
     defer compressed.deinit();
     const unpacked_data = try compressed.unpackWithReset(std.testing.allocator, std.math.maxInt(impl.BitPacker.ValueType));
     defer std.testing.allocator.free(unpacked_data);
-    const decompressed = try decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpacked_data, std.testing.allocator);
+    const decompressed = try decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpacked_data, str.len, std.testing.allocator);
     defer decompressed.deinit();
     try std.testing.expectEqualSlices(u8, str, decompressed.items);
 }

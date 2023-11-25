@@ -12,7 +12,7 @@ comptime {
 }
 
 comptime {
-    std.debug.assert(@bitSizeOf(usize) <= @bitSizeOf(u32));
+    std.debug.assert(@bitSizeOf(usize) == @bitSizeOf(u32));
 }
 
 export fn compress(ptr: [*]u8, length: usize) i32 {
@@ -23,18 +23,18 @@ export fn compress(ptr: [*]u8, length: usize) i32 {
     };
 
     const item_count = output.arr.items.len;
-    const content_length: u64 = item_count * @sizeOf(impl.BitPacker.UnderlyingType) + @sizeOf(u32); // In bytes. Compressed stream followed by the token count.
+    const content_length: u64 = item_count * @sizeOf(impl.BitPacker.UnderlyingType) + 2 * @sizeOf(u32); // In bytes. Compressed stream followed by the token count and expected output length.
     output.arr.ensureTotalCapacity(item_count + 2) catch {
         return -1;
     };
-    // Token Count followed by the usual footer
-    output.arr.appendAssumeCapacity((@as(u64, @intCast(content_length)) << @bitSizeOf(usize)) | output.size);
-    output.arr.appendAssumeCapacity((@as(u64, @intCast(output.arr.capacity)) * @sizeOf(impl.BitPacker.UnderlyingType)));
+    // Token Count and Expected Output Length followed by the usual footer
+    output.arr.appendAssumeCapacity((@as(u64, @intCast(length)) << @bitSizeOf(u32)) | output.size);
+    output.arr.appendAssumeCapacity((@as(u64, @intCast(output.arr.capacity)) * @sizeOf(impl.BitPacker.UnderlyingType)) << @bitSizeOf(u32) | content_length);
 
-    return @intCast(@intFromPtr(output.arr.items.ptr + item_count) + 4);
+    return @intCast(@intFromPtr(output.arr.items.ptr + item_count) + 2 * @sizeOf(u32));
 }
 
-export fn decompress(ptr: [*]impl.BitPacker.UnderlyingType, length: usize, token_count: usize) i32 {
+export fn decompress(ptr: [*]impl.BitPacker.UnderlyingType, length: usize, token_count: usize, expected_output_length: usize) i32 {
     const allocator = std.heap.page_allocator;
     const data: []impl.BitPacker.UnderlyingType = ptr[0..length];
 
@@ -48,7 +48,7 @@ export fn decompress(ptr: [*]impl.BitPacker.UnderlyingType, length: usize, token
         return -1;
     };
 
-    var output = impl.decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpackedData, allocator) catch {
+    var output = impl.decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpackedData, expected_output_length, allocator) catch {
         return -1;
     };
 
