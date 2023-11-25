@@ -41,11 +41,7 @@ ChartJS.defaults.borderColor = '#555'
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors)
 
-// import { compress, decompress } from 'smol-string'
-// import { compressPacked, decompressPacked } from 'smol-string/packed'
-
 import { compress, decompress } from 'smol-string/worker'
-import { compressPacked, decompressPacked } from 'smol-string/worker/packed'
 
 // @ts-expect-error
 import LZString from '../../lz-string.min.js'
@@ -83,7 +79,7 @@ const chartOptions = {
 const chartSizeOptions = structuredClone(chartOptions)
 chartSizeOptions.scales.y.title.text = 'Size (%)'
 
-const methods = ['smol-string', 'smol-string-packed', 'LZString', 'LZString UTF-16']
+const methods = ['smol-string', 'LZString', 'LZString UTF-16']
 
 const chartDataCompression = computed(() => {
   const datasets = []
@@ -173,7 +169,6 @@ for (const { name, input } of usedTests) {
 
 for (const { name, input } of usedTests) {
   await test('smol-string', name, input, compress, decompress)
-  await test('smol-string-packed', name, input, compressPacked, decompressPacked)
   await test('LZString', name, input, LZString.compress, LZString.decompress)
   await test('LZString UTF-16', name, input, LZString.compressToUTF16, LZString.decompressFromUTF16)
 }
