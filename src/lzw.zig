@@ -1,41 +1,48 @@
 const std = @import("std");
 
 const Context = @import("Context.zig");
+const bp = @import("./BitPacker.zig");
 
-pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const u8, allocator: std.mem.Allocator) !std.ArrayList(TokenType) {
-    if (data.len == 0) return std.ArrayList(TokenType).init(allocator);
+const impl = @import("lzw.zig");
 
-    const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
-    var next_value: TokenType = first_allocated_token;
-    var context = Context.HashMap(TokenType).init(allocator);
+pub const BitPacker = bp.BitPacker(u64, u20, 9, 0);
+
+pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
+    if (data.len == 0) return BitPacker.init(allocator);
+
+    const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1;
+    var next_value: BitPacker.ValueType = first_allocated_token;
+    var context = Context.HashMap(BitPacker.ValueType).init(allocator);
     defer context.deinit();
-    try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
     // Max string length in dictionary based on its first character.
     var max_length: [256]u16 = undefined;
     @memset(&max_length, 2);
 
-    var output = try std.ArrayList(TokenType).initCapacity(allocator, data.len);
+    var output = try BitPacker.initCapacity(allocator, data.len);
 
     var i: usize = 0;
     var curr_len: usize = 2;
-    var prev_value: ?TokenType = null;
+    var prev_value: ?BitPacker.ValueType = null;
     while (i + curr_len < data.len) {
         const str = data[i .. i + curr_len];
         const value = context.get(str);
         if (value == null) {
-            output.appendAssumeCapacity(if (str.len == 2) (@as(TokenType, @intCast(str[0])) + reserved_codepoints) else prev_value.?);
+            output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
             max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(curr_len - 1)));
 
-            if (next_value == sentinel_token) {
+            if (next_value == std.math.maxInt(BitPacker.ValueType)) {
                 // Restart compression from here with a fresh context
                 context.clearRetainingCapacity();
                 @memset(&max_length, 2);
                 // Insert special token signifying a context reset for decompression.
-                output.appendAssumeCapacity(sentinel_token);
+                output.appendAssumeCapacity(std.math.maxInt(BitPacker.ValueType));
+
+                output.resetValueSize();
+
                 next_value = first_allocated_token;
             } else {
-                context.putAssumeCapacityNoClobber(str, next_value);
+                try context.putNoClobber(str, next_value);
                 next_value += 1;
             }
 
@@ -60,12 +67,12 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
 
     // Handle the last unencoded bytes.
     if (i + 1 >= data.len) {
-        output.appendAssumeCapacity(@as(TokenType, @intCast(data[i])) + reserved_codepoints);
+        output.appendAssumeCapacity(@intCast(data[i]));
     } else {
         const value = context.get(data[i .. i + curr_len]);
         if (value == null) {
-            output.appendAssumeCapacity(if (curr_len == 2) (@as(TokenType, @intCast(data[i])) + reserved_codepoints) else context.get(data[i .. i + curr_len - 1]).?);
-            output.appendAssumeCapacity(@as(TokenType, @intCast(data[i + curr_len - 1])) + reserved_codepoints);
+            output.appendAssumeCapacity(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i]))) else context.get(data[i .. i + curr_len - 1]).?);
+            output.appendAssumeCapacity(@intCast(data[i + curr_len - 1]));
         } else {
             output.appendAssumeCapacity(value.?);
         }
@@ -74,7 +81,7 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
     return output;
 }
 
-pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, allocator: std.mem.Allocator) !std.ArrayList(u8) {
+pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, expected_output_size: usize, allocator: std.mem.Allocator) !std.ArrayList(u8) {
     if (data.len == 0) return std.ArrayList(u8).init(allocator);
 
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
@@ -84,8 +91,8 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
     try context.ensureTotalCapacity(std.math.maxInt(TokenType));
     context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
 
-    // FIXME: We need to make sure pointers to that buffer will be stable for the slices in context to stay valid.
-    var output = try std.ArrayList(u8).initCapacity(allocator, 24 * data.len);
+    // FIXME: Why *4? Because benchmarks are 10% slower without it. I have no idea why.
+    var output = try std.ArrayList(u8).initCapacity(allocator, 4 * expected_output_size);
     output.appendAssumeCapacity(@intCast(data[0] - reserved_codepoints));
 
     context.items[data[0]] = output.items[0..1];
@@ -139,9 +146,11 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
 }
 
 fn testRound(str: []const u8) !void {
-    const compressed = try compress(u16, 32, 0xDFFE, str, std.testing.allocator);
+    var compressed = try compress(str, std.testing.allocator);
     defer compressed.deinit();
-    const decompressed = try decompress(u16, 32, 0xDFFE, compressed.items, std.testing.allocator);
+    const unpacked_data = try compressed.unpackWithReset(std.testing.allocator, std.math.maxInt(impl.BitPacker.ValueType));
+    defer std.testing.allocator.free(unpacked_data);
+    const decompressed = try decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpacked_data, str.len, std.testing.allocator);
     defer decompressed.deinit();
     try std.testing.expectEqualSlices(u8, str, decompressed.items);
 }

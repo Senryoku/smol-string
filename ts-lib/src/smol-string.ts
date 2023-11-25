@@ -9,7 +9,12 @@ type exportsType = {
 	allocUint8: (size: number) => number;
 	allocUint16: (size: number) => number;
 	compress: (ptr: number, length: number) => number;
-	decompress: (ptr: number, length: number) => number;
+	decompress: (
+		ptr: number,
+		length: number,
+		tokenCount: number,
+		expectedOutputSize: number
+	) => number;
 	free: (ptr: number, length: number) => void;
 	memory: WebAssembly.Memory;
 };
@@ -28,8 +33,10 @@ export function compress(str: string) {
 
 	const { start, end, capacity } = extractFooter(exports.memory, ptrToFooter);
 
-	const content = new Uint16Array(exports.memory.buffer.slice(start, end));
-	const r = Uint16ArraytoString(content);
+	// Includes the tokenCount at the end of the stream (2 * u16).
+	const compressed = new Uint16Array(exports.memory.buffer.slice(start, end));
+
+	const r = Uint16ArraytoString(compressed);
 
 	exports.free(start, capacity);
 
@@ -37,21 +44,33 @@ export function compress(str: string) {
 }
 
 export function decompress(compressedStr: string) {
-	const ptrToCompressed = exports.allocUint16(compressedStr.length);
-	const compressed_buffer = new Uint16Array(
+	const tokenCount =
+		(compressedStr.charCodeAt(compressedStr.length - 3)! << 16) +
+		compressedStr.charCodeAt(compressedStr.length - 4);
+	const expectedOutputSize =
+		(compressedStr.charCodeAt(compressedStr.length - 1)! << 16) +
+		compressedStr.charCodeAt(compressedStr.length - 2);
+
+	const dataLength = compressedStr.length - 4;
+
+	let ptrToCompressed = exports.allocUint16(dataLength);
+	let compressed_buffer = new Uint16Array(
 		exports.memory.buffer,
 		ptrToCompressed,
-		compressedStr.length
+		dataLength
 	);
-	for (let i = 0; i < compressedStr.length; i++)
+
+	for (let i = 0; i < dataLength; i++)
 		compressed_buffer[i] = compressedStr.charCodeAt(i);
 
 	const ptrToFooter = exports.decompress(
 		ptrToCompressed,
-		compressedStr.length
+		dataLength,
+		tokenCount,
+		expectedOutputSize
 	);
 
-	exports.free(ptrToCompressed, 2 * compressedStr.length);
+	exports.free(ptrToCompressed, 2 * dataLength);
 
 	if (ptrToFooter < 0) throw new Error("Error decompressing string.");
 

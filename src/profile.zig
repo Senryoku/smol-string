@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const lzw = @import("lzwPacked.zig");
+const lzw = @import("lzw.zig");
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
@@ -8,7 +8,7 @@ pub fn main() !void {
     defer allocator.free(str);
 
     for (0..10) |_| {
-        var compressed = try lzw.compressPacked(str, allocator);
+        var compressed = try lzw.compress(str, allocator);
         defer compressed.deinit();
     }
 }
