@@ -10,10 +10,7 @@ export default defineConfig({
 		lib: {
 			entry: {
 				"smol-string": "./src/smol-string.ts",
-				"smol-string-packed": "./src/smol-string-packed.ts",
 				"smol-string-worker": "./src/smol-string-worker.ts",
-				"smol-string-worker-packed":
-					"./src/smol-string-worker-packed.ts",
 			},
 			formats: ["es"],
 		},

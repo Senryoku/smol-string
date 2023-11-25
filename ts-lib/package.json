@@ -1,6 +1,6 @@
 {
 	"name": "smol-string",
-	"version": "0.1.2-beta",
+	"version": "0.2.0-beta",
 	"description": "Compression for browser localStorage",
 	"author": "Senryoku <maretverdant@gmail.com>",
 	"repository": {
@@ -37,17 +37,9 @@
 			"types": "./dist/smol-string.d.ts",
 			"import": "./dist/smol-string.js"
 		},
-		"./packed": {
-			"types": "./dist/smol-string-packed.d.ts",
-			"import": "./dist/smol-string-packed.js"
-		},
 		"./worker": {
 			"types": "./dist/smol-string-worker.d.ts",
 			"import": "./dist/smol-string-worker.js"
-		},
-		"./worker/packed": {
-			"types": "./dist/smol-string-worker-packed.d.ts",
-			"import": "./dist/smol-string-worker-packed.js"
 		}
 	},
 	"devDependencies": {

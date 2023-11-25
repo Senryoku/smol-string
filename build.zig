@@ -7,9 +7,6 @@ fn copyLib(self: *std.build.Step, progress: *std.Progress.Node) !void {
     std.fs.cwd().copyFile("zig-out/lib/smol-string.wasm", std.fs.cwd(), "ts-lib/src/module.wasm", .{}) catch |err| {
         std.log.err("Unable to copy smol-string.wasm to www/: {s}", .{@errorName(err)});
     };
-    std.fs.cwd().copyFile("zig-out/lib/smol-string-packed.wasm", std.fs.cwd(), "ts-lib/src/module-packed.wasm", .{}) catch |err| {
-        std.log.err("Unable to copy smol-string-packed.wasm to www/: {s}", .{@errorName(err)});
-    };
 }
 
 // Although this function looks imperative, note that its job is to
@@ -37,25 +34,13 @@ pub fn build(b: *std.Build) void {
     });
     lib.rdynamic = true;
 
-    var lib_packed = b.addSharedLibrary(.{
-        .name = "smol-string-packed",
-        // In this case the main source file is merely a path, however, in more
-        // complicated build scripts, this could be a generated file.
-        .root_source_file = .{ .path = "src/wasmPacked.zig" },
-        .target = .{ .cpu_arch = .wasm32, .os_tag = .freestanding },
-        .optimize = .ReleaseSmall,
-    });
-    lib_packed.rdynamic = true;
-
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
     b.installArtifact(lib);
-    b.installArtifact(lib_packed);
 
     const copyStep = b.step("copy", "copy libraries to www/");
     copyStep.dependOn(&lib.step);
-    copyStep.dependOn(&lib_packed.step);
     copyStep.dependOn(b.getInstallStep());
     copyStep.makeFn = copyLib;
 
