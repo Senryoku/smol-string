@@ -11,6 +11,10 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
     defer context.deinit();
     try context.ensureTotalCapacity(@min(sentinel_token + 1, data.len));
 
+    // Max string length in dictionary based on its first character.
+    var max_length: [256]u16 = undefined;
+    @memset(&max_length, 2);
+
     var output = try std.ArrayList(TokenType).initCapacity(allocator, data.len);
 
     var i: usize = 0;
@@ -21,20 +25,32 @@ pub fn compress(comptime TokenType: type, comptime reserved_codepoints: TokenTyp
         const value = context.get(str);
         if (value == null) {
             output.appendAssumeCapacity(if (str.len == 2) (@as(TokenType, @intCast(str[0])) + reserved_codepoints) else prev_value.?);
-
-            i += curr_len - 1;
-            curr_len = 2;
+            max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(curr_len - 1)));
 
             if (next_value == sentinel_token) {
                 // Restart compression from here with a fresh context
                 context.clearRetainingCapacity();
-                // Insert special token. We can use next_value since it will never be used as currently written.
+                @memset(&max_length, 2);
+                // Insert special token signifying a context reset for decompression.
                 output.appendAssumeCapacity(sentinel_token);
                 next_value = first_allocated_token;
-                continue;
             } else {
                 context.putAssumeCapacityNoClobber(str, next_value);
                 next_value += 1;
+            }
+
+            i += curr_len - 1;
+            curr_len = 2;
+
+            // Binary search for the largest string in context
+            var max: usize = @min(data.len - i, max_length[data[i]]);
+            while (max - curr_len > 4) {
+                const mid = curr_len + (max - curr_len) / 2;
+                if (context.get(data[i .. i + mid]) == null) {
+                    max = @intCast(mid);
+                } else {
+                    curr_len = @intCast(mid);
+                }
             }
         } else {
             curr_len += 1;

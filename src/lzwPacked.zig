@@ -16,6 +16,10 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
     var context = Context.HashMap(BitPacker.ValueType).init(allocator);
     defer context.deinit();
 
+    // Max string length in dictionary based on its first character.
+    var max_length: [256]u16 = undefined;
+    @memset(&max_length, 2);
+
     var output = try BitPacker.initCapacity(allocator, data.len);
 
     var i: usize = 0;
@@ -26,13 +30,12 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
         const value = context.get(str);
         if (value == null) {
             output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
-
-            i += curr_len - 1;
-            curr_len = 2;
+            max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(curr_len - 1)));
 
             if (next_value == sentinel_token) {
                 // Restart compression from here with a fresh context
                 context.clearRetainingCapacity();
+                @memset(&max_length, 2);
                 // Insert special token. We can use next_value since it will never be used as currently written.
                 output.appendAssumeCapacity(sentinel_token);
 
@@ -44,6 +47,20 @@ pub fn compressPacked(data: []const u8, allocator: std.mem.Allocator) !BitPacker
             } else {
                 try context.putNoClobber(str, next_value);
                 next_value += 1;
+            }
+
+            i += curr_len - 1;
+            curr_len = 2;
+
+            // Binary search for the largest string in context
+            var max: usize = @min(data.len - i, max_length[data[i]]);
+            while (max - curr_len > 4) {
+                const mid = curr_len + (max - curr_len) / 2;
+                if (context.get(data[i .. i + mid]) == null) {
+                    max = @intCast(mid);
+                } else {
+                    curr_len = @intCast(mid);
+                }
             }
         } else {
             curr_len += 1;
