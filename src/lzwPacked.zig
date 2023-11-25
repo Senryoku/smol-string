@@ -105,6 +105,18 @@ test "basic" {
     try testRound("a");
     try testRound("aa");
     try testRound("aaa");
+    try testRound("aaaa");
+    try testRound("aaaaaa");
+    try testRound("aabbaaccaaccaavvbbaaxaaaavwaa");
+    try testRound("1212121");
+    try testRound("3737373");
+    try testRound("3333737370");
+    try testRound("3333737370000000000000000000000");
+    try testRound("12121212");
+    try testRound("37373737");
+    try testRound("33337373737");
+    try testRound("3333737373700000000000000000000");
+    try testRound("3333773737373777777373773737373");
 }
 
 test "fuzzing" {
