@@ -44,6 +44,7 @@
 	},
 	"devDependencies": {
 		"@vitest/browser": "^0.34.6",
+		"binaryen": "^116.0.0",
 		"smol-string": "^0.1.1-beta",
 		"typescript": "^5.2.2",
 		"vite": "^5.0.0",

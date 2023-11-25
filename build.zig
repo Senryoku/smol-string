@@ -1,14 +1,5 @@
 const std = @import("std");
 
-fn copyLib(self: *std.build.Step, progress: *std.Progress.Node) !void {
-    _ = progress;
-    _ = self;
-
-    std.fs.cwd().copyFile("zig-out/lib/smol-string.wasm", std.fs.cwd(), "ts-lib/src/module.wasm", .{}) catch |err| {
-        std.log.err("Unable to copy smol-string.wasm to www/: {s}", .{@errorName(err)});
-    };
-}
-
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
@@ -38,13 +29,6 @@ pub fn build(b: *std.Build) void {
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
     b.installArtifact(lib);
-
-    const copyStep = b.step("copy", "copy libraries to www/");
-    copyStep.dependOn(&lib.step);
-    copyStep.dependOn(b.getInstallStep());
-    copyStep.makeFn = copyLib;
-
-    b.default_step = copyStep;
 
     // Creates a step for unit testing. This only builds the test executable
     // but does not run it.

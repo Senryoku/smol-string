@@ -5,6 +5,8 @@ import pkg from "./package.json" assert { type: "json" };
 
 import topLevelAwait from "vite-plugin-top-level-await";
 
+import { exec } from "child_process";
+
 export default defineConfig({
 	build: {
 		lib: {
@@ -32,6 +34,14 @@ export default defineConfig({
 					// The function to generate import names of top-level await promise in each chunk module
 					promiseImportName: (i) => `__tla_${i}`,
 				}),
+				{
+					name: "optimize-wasm",
+					async buildStart(options) {
+						exec(
+							"npx wasm-opt -O3 ../zig-out/lib/smol-string.wasm -o ./src/module.wasm"
+						);
+					},
+				},
 			];
 		},
 	},

@@ -35,7 +35,7 @@ const decompressed = await decompress(compressed);
 ## Build
 
 ```sh
-zig build         # Builds the wasm modules and copies them to `ts-lib/src`.
+zig build         # Builds the wasm modules to `zig-out/lib/` by default.
 ```
 
 ```sh
