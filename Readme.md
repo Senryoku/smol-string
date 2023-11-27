@@ -23,7 +23,7 @@ const compressed = compress(input);
 const decompressed = decompress(compressed);
 ```
 
-An async version offloading the processing to a webworker is also available. API is identical, expect that each function returns a promise:
+An async version offloading the processing to a webworker is also available. API is identical, except that each function returns a promise:
 
 ```ts
 import { compress, decompress } from "smol-string/worker";
