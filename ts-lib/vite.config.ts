@@ -38,7 +38,7 @@ export default defineConfig({
 					name: "optimize-wasm",
 					async buildStart(options) {
 						exec(
-							"npx wasm-opt -O3 ../zig-out/lib/smol-string.wasm -o ./src/module.wasm"
+							"npx wasm-opt -O3 ../zig-out/bin/smol-string.wasm -o ./src/module.wasm"
 						);
 					},
 				},
