@@ -1,11 +1,11 @@
 {
 	"name": "smol-string",
-	"version": "0.2.0-beta",
+	"version": "1.0.0",
 	"description": "Compression for browser localStorage",
 	"author": "Senryoku <maretverdant@gmail.com>",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Senryoku/smol-string.git"
+		"url": "git+https://github.com/Senryoku/smol-string.git"
 	},
 	"license": "MIT",
 	"keywords": [
