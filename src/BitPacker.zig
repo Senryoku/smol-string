@@ -234,7 +234,7 @@ test "incrementing bit size" {
 
     var it = bp.iterator();
     for (0..64) |v| {
-        try std.testing.expectEqual(it.next(), @intCast(v));
+        try std.testing.expectEqual(it.next(), @as(u16, @intCast(v)));
     }
 }
 
@@ -253,7 +253,7 @@ test "incrementing bit size and reserved bits" {
 
     var it = bp.iterator();
     for (0..64) |v| {
-        try std.testing.expectEqual(it.next(), @intCast(v));
+        try std.testing.expectEqual(it.next(), @as(u16, @intCast(v)));
     }
 }
 
@@ -267,7 +267,7 @@ test "initial_bit_size(2) and reserved_bits(0)" {
 
     var it = bp.iterator();
     for (0..32768) |v| {
-        try std.testing.expectEqual(it.next(), @intCast(v));
+        try std.testing.expectEqual(it.next(), @as(u16, @intCast(v)));
     }
 }
 
@@ -286,7 +286,7 @@ test "initial_bit_size(9) and reserved_bits(1)" {
 
     var it = bp.iterator();
     for (0..32768) |v| {
-        try std.testing.expectEqual(it.next(), @intCast(v));
+        try std.testing.expectEqual(it.next(), @as(u16, @intCast(v)));
     }
 }
 
@@ -305,13 +305,13 @@ test "underlying_type(u16), value_type(u32), initial_bit_size(9) and reserved_bi
 
     var it = bp.iterator();
     for (0..131072) |v| {
-        try std.testing.expectEqual(it.next(), @intCast(v));
+        try std.testing.expectEqual(it.next(), @as(u32, @intCast(v)));
     }
 
     const unpacked = try bp.unpack(std.testing.allocator);
     defer std.testing.allocator.free(unpacked);
 
     for (unpacked) |v| {
-        try std.testing.expectEqual(v, @intCast(v));
+        try std.testing.expectEqual(v, @as(u32, @intCast(v)));
     }
 }
