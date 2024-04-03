@@ -28,7 +28,7 @@
 		"test:chrome": "vitest --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
 		"test:firefox": "vitest --browser.name=firefox --browser.headless --config browser.vitest.config.ts",
 		"test:edge": "vitest --browser.name=edge --browser.headless --config browser.vitest.config.ts",
-		"test:safari": "vitest --browser.name=safari --browser.headless --config browser.vitest.config.ts",
+		"test:safari": "vitest --browser.name=safari --no-browser.headless --config browser.vitest.config.ts",
 		"bench": "vitest bench"
 	},
 	"main": "./dist/smol-string.js",
