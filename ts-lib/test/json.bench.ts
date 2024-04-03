@@ -5,9 +5,9 @@ import { TestData } from "./common.js";
 import { compress, decompress } from "../dist/smol-string.js";
 
 import {
-	compressPacked as npmCompress,
-	decompressPacked as npmDecompress,
-} from "smol-string/packed";
+	compress as npmCompress,
+	decompress as npmDecompress,
+} from "smol-string";
 
 const options = { iterations: 10, timeout: 100000 };
 
