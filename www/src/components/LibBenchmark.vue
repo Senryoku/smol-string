@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 import { Bar } from 'vue-chartjs'
 import {
@@ -55,6 +55,7 @@ const results = ref({ compressed: {}, decompressed: {}, success: {}, size: {} } 
 
 const chartOptions = {
   responsive: true,
+  maintainAspectRatio: true,
   plugins: {
     colors: {
       forceOverride: true
@@ -145,6 +146,13 @@ async function test(
   const decompressed = await decompress(restored_compressed_string!)
   const decompress_time = performance.now() - decompressed_start
 
+  if (!results.value['compressed'][file]) {
+    results.value['compressed'][file] = {}
+    results.value['decompressed'][file] = {}
+    results.value['success'][file] = {}
+    results.value['size'][file] = {}
+  }
+
   results.value['compressed'][file][method] = compress_time
   results.value['size'][file][method] = 100.0 * (compressed.length / testData.length)
   results.value['decompressed'][file][method] = decompress_time
@@ -153,25 +161,26 @@ async function test(
 
 import { json_512kb, json_1mb, rw_medium, rw_large } from '../../../ts-lib/test/common'
 
-const usedTests = [
-  { name: 'json_512kb', input: JSON.stringify(await json_512kb) },
-  { name: 'json_1mb', input: JSON.stringify(await json_1mb) },
-  { name: 'rw_medium', input: JSON.stringify(await rw_medium) },
-  { name: 'rw_large', input: JSON.stringify(await rw_large) }
-]
+onMounted(async () => {
+  const usedTests = [
+    { name: 'json_512kb', input: JSON.stringify((await json_512kb).default) },
+    { name: 'json_1mb', input: JSON.stringify((await json_1mb).default) },
+    { name: 'rw_medium', input: JSON.stringify((await rw_medium).default) },
+    { name: 'rw_large', input: JSON.stringify((await rw_large).default) }
+  ]
 
-for (const { name, input } of usedTests) {
-  results.value['compressed'][name] = {}
-  results.value['decompressed'][name] = {}
-  results.value['success'][name] = {}
-  results.value['size'][name] = {}
-}
-
-for (const { name, input } of usedTests) {
-  await test('smol-string', name, input, compress, decompress)
-  await test('LZString', name, input, LZString.compress, LZString.decompress)
-  await test('LZString UTF-16', name, input, LZString.compressToUTF16, LZString.decompressFromUTF16)
-}
+  for (const { name, input } of usedTests) {
+    await test('smol-string', name, input, compress, decompress)
+    await test('LZString', name, input, LZString.compress, LZString.decompress)
+    await test(
+      'LZString UTF-16',
+      name,
+      input,
+      LZString.compressToUTF16,
+      LZString.decompressFromUTF16
+    )
+  }
+})
 </script>
 
 <style scoped></style>
