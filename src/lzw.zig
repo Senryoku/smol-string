@@ -26,8 +26,10 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
     var prev_value: ?BitPacker.ValueType = null;
     while (i + curr_len < data.len) {
         const str = data[i .. i + curr_len];
-        const value = context.get(str);
-        if (value == null) {
+        if (context.get(str)) |value| {
+            curr_len += 1;
+            prev_value = value;
+        } else {
             output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
             max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(curr_len - 1)));
 
@@ -52,16 +54,13 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
             // Binary search for the largest string in context
             var max: usize = @min(data.len - i, max_length[data[i]]);
             while (max - curr_len > 4) {
-                const mid = curr_len + (max - curr_len) / 2;
+                const mid: usize = curr_len + (max - curr_len) / 2;
                 if (context.get(data[i .. i + mid]) == null) {
-                    max = @intCast(mid);
+                    max = mid;
                 } else {
-                    curr_len = @intCast(mid);
+                    curr_len = mid;
                 }
             }
-        } else {
-            curr_len += 1;
-            prev_value = value;
         }
     }
 
@@ -69,12 +68,11 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
     if (i + 1 >= data.len) {
         output.appendAssumeCapacity(@intCast(data[i]));
     } else {
-        const value = context.get(data[i .. i + curr_len]);
-        if (value == null) {
+        if (context.get(data[i .. i + curr_len])) |value| {
+            output.appendAssumeCapacity(value);
+        } else {
             output.appendAssumeCapacity(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i]))) else context.get(data[i .. i + curr_len - 1]).?);
             output.appendAssumeCapacity(@intCast(data[i + curr_len - 1]));
-        } else {
-            output.appendAssumeCapacity(value.?);
         }
     }
 
@@ -122,15 +120,16 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
         if (v < first_allocated_token) {
             output.appendAssumeCapacity(@intCast(v - reserved_codepoints));
         } else {
-            const str = context.items[v];
-            if (str == null) {
+            if (context.items[v]) |str| {
+                output.appendSliceAssumeCapacity(str);
+            } else {
                 // I think the only case where this might happen, is repeating characters.
                 // For example, 'aaaa' will be encoded as [129, 288, 129], with 288 representing 'aa'.
                 // However the decoder will never have encountered 'aa' before.
                 // FIXME: Thoroughly test this.
                 output.appendSliceAssumeCapacity(output.items[prev_start..new_start]);
                 output.appendAssumeCapacity(output.items[prev_start]);
-            } else output.appendSliceAssumeCapacity(context.items[v].?);
+            }
         }
 
         //                          equivalent to concat(prev_str, str[0])
