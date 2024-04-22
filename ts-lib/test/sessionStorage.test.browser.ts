@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import { TestData } from "./common.js";
+import { BrowserTestData } from "./browserCommon.js";
 
 import { compress, decompress } from "../dist/smol-string.js";
 
 describe("compress and decompress via sessionStorage", () => {
-	for (const { name, input } of TestData) {
+	for (const { name, input } of BrowserTestData) {
 		test(name, async () => {
 			const compressed = compress(input);
 
