@@ -6,9 +6,9 @@ const impl = @import("lzw.zig");
 
 const wasmAllocator = @import("./wasmAllocator.zig");
 comptime {
-    @export(wasmAllocator.allocUint8, .{ .name = "allocUint8", .linkage = .Strong });
-    @export(wasmAllocator.allocUint16, .{ .name = "allocUint16", .linkage = .Strong });
-    @export(wasmAllocator.free, .{ .name = "free", .linkage = .Strong });
+    @export(wasmAllocator.allocUint8, .{ .name = "allocUint8", .linkage = .strong });
+    @export(wasmAllocator.allocUint16, .{ .name = "allocUint16", .linkage = .strong });
+    @export(wasmAllocator.free, .{ .name = "free", .linkage = .strong });
 }
 
 comptime {
