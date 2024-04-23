@@ -18,62 +18,69 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
 
     // Max string length in dictionary based on its first character.
     var max_length: [256]u16 = undefined;
-    @memset(&max_length, 2);
+    @memset(&max_length, 1);
 
     var output = try BitPacker.initCapacity(allocator, data.len);
 
     var i: usize = 0;
-    var curr_len: usize = 2;
-    var prev_value: ?BitPacker.ValueType = null;
-    while (i + curr_len < data.len) {
-        const str = data[i .. i + curr_len];
-        if (context.get(str)) |value| {
-            curr_len += 1;
-            prev_value = value;
-        } else {
-            output.appendAssumeCapacity(if (str.len == 2) (@as(BitPacker.ValueType, @intCast(str[0]))) else prev_value.?);
-            max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(curr_len - 1)));
+    while (true) {
+        const d = data[i..];
+        var curr_len: usize = 1;
+        var prev_value: BitPacker.ValueType = (@as(BitPacker.ValueType, @intCast(d[0])));
 
-            if (next_value == std.math.maxInt(BitPacker.ValueType)) {
-                // Restart compression from here with a fresh context
-                context.clearRetainingCapacity();
-                @memset(&max_length, 2);
-                // Insert special token signifying a context reset for decompression.
-                output.appendAssumeCapacity(std.math.maxInt(BitPacker.ValueType));
-
-                output.resetValueSize();
-
-                next_value = first_allocated_token;
+        var max: usize = @min(d.len, max_length[d[0]]);
+        // Binary search for the largest string in context
+        while (max > curr_len + 1) {
+            const mid: usize = curr_len + (max - curr_len) / 2;
+            if (context.get(d[0..mid])) |value| {
+                curr_len = mid;
+                prev_value = value;
             } else {
-                context.putAssumeCapacityNoClobber(str, next_value);
-                next_value += 1;
+                max = mid - 1;
             }
+        }
 
-            i += curr_len - 1;
-            curr_len = 2;
-
-            // Binary search for the largest string in context
-            var max: usize = @min(data.len - i, max_length[data[i]]);
-            while (max - curr_len > 4) {
-                const mid: usize = curr_len + (max - curr_len) / 2;
-                if (context.get(data[i .. i + mid]) == null) {
-                    max = mid;
-                } else {
-                    curr_len = mid;
-                }
+        if (curr_len < max) {
+            if (context.get(d[0..max])) |value| {
+                prev_value = value;
+                curr_len = max;
             }
+        }
+
+        output.appendAssumeCapacity(prev_value);
+        i += curr_len;
+
+        if (curr_len >= d.len - 1) break;
+
+        if (next_value != std.math.maxInt(BitPacker.ValueType)) {
+            const str = d[0 .. curr_len + 1];
+            max_length[str[0]] = @max(max_length[str[0]], @as(u16, @intCast(str.len)));
+            context.putAssumeCapacityNoClobber(str, next_value);
+            next_value += 1;
+        } else {
+            // Restart compression from here with a fresh context
+            context.clearRetainingCapacity();
+            @memset(&max_length, 1);
+            // Insert special token signifying a context reset for decompression.
+            output.appendAssumeCapacity(std.math.maxInt(BitPacker.ValueType));
+
+            output.resetValueSize();
+
+            next_value = first_allocated_token;
         }
     }
 
     // Handle the last unencoded bytes.
-    if (i + 1 >= data.len) {
-        output.appendAssumeCapacity(@intCast(data[i]));
-    } else {
-        if (context.get(data[i .. i + curr_len])) |value| {
-            output.appendAssumeCapacity(value);
+    if (i < data.len) {
+        if (i + 1 >= data.len) {
+            output.appendAssumeCapacity(@intCast(data[i]));
         } else {
-            output.appendAssumeCapacity(if (curr_len == 2) (@as(BitPacker.ValueType, @intCast(data[i]))) else context.get(data[i .. i + curr_len - 1]).?);
-            output.appendAssumeCapacity(@intCast(data[i + curr_len - 1]));
+            if (context.get(data[i .. i + 2])) |value| {
+                output.appendAssumeCapacity(value);
+            } else {
+                output.appendAssumeCapacity(@as(BitPacker.ValueType, @intCast(data[i])));
+                output.appendAssumeCapacity(@intCast(data[i + 1]));
+            }
         }
     }
 
