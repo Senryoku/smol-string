@@ -13,3 +13,24 @@ export const TestData = [
 	{ name: "rw_medium", input: JSON.stringify(await rw_medium) },
 	{ name: "rw_large", input: JSON.stringify(await rw_large) },
 ];
+
+function getCrypto() {
+	try {
+		return window.crypto;
+	} catch {
+		return crypto;
+	}
+}
+
+export function randomStr(len: number) {
+	var arr = new Uint8Array(len);
+	getCrypto().getRandomValues(arr);
+	return new TextDecoder().decode(arr);
+}
+
+for (let i = 0; i < 10; ++i) {
+	TestData.push({
+		name: `Random string #${i}`,
+		input: randomStr(65536),
+	});
+}
