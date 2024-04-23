@@ -1,4 +1,4 @@
-import { describe, bench, expect, test, beforeAll } from "vitest";
+import { describe, bench, expect } from "vitest";
 
 import { TestData } from "./common.js";
 
