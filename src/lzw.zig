@@ -107,45 +107,39 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
     var i: usize = 1;
     while (i < data.len) {
         const v = data[i];
+        const new_start = output.items.len;
 
-        // Special reset token
-        if (v == sentinel_token) {
+        if (v != sentinel_token) {
+            if (v < first_allocated_token) {
+                output.appendAssumeCapacity(@intCast(v - reserved_codepoints));
+            } else {
+                if (context.items[v]) |str| {
+                    output.appendSliceAssumeCapacity(str);
+                } else {
+                    // I think the only case where this might happen, is repeating characters.
+                    // For example, 'aaaa' will be encoded as [129, 288, 129], with 288 representing 'aa'.
+                    // However the decoder will never have encountered 'aa' before.
+                    // FIXME: Thoroughly test this.
+                    output.appendSliceAssumeCapacity(output.items[prev_start..new_start]);
+                    output.appendAssumeCapacity(output.items[prev_start]);
+                }
+            }
+
+            //                          equivalent to concat(prev_str, str[0])
+            context.items[next_value] = output.items[prev_start .. new_start + 1];
+            next_value += 1;
+        } else { // Special reset token
             i += 1; // Skip special token
             if (i >= data.len) break;
             // Reinitialize state
             next_value = first_allocated_token;
             context.clearRetainingCapacity();
             context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
-            prev_start = output.items.len;
             try std.testing.expect(data[i] < first_allocated_token);
             output.appendAssumeCapacity(@intCast(data[i] - reserved_codepoints));
-            i += 1;
-            continue;
         }
-
-        const new_start = output.items.len;
-
-        if (v < first_allocated_token) {
-            output.appendAssumeCapacity(@intCast(v - reserved_codepoints));
-        } else {
-            if (context.items[v]) |str| {
-                output.appendSliceAssumeCapacity(str);
-            } else {
-                // I think the only case where this might happen, is repeating characters.
-                // For example, 'aaaa' will be encoded as [129, 288, 129], with 288 representing 'aa'.
-                // However the decoder will never have encountered 'aa' before.
-                // FIXME: Thoroughly test this.
-                output.appendSliceAssumeCapacity(output.items[prev_start..new_start]);
-                output.appendAssumeCapacity(output.items[prev_start]);
-            }
-        }
-
-        //                          equivalent to concat(prev_str, str[0])
-        context.items[next_value] = output.items[prev_start .. new_start + 1];
-        next_value += 1;
 
         prev_start = new_start;
-
         i += 1;
     }
 
