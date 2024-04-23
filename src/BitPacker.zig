@@ -156,18 +156,18 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
 
                 var output: ValueType = 0;
 
-                var remainding_bits = self.value_size;
-                while (remainding_bits > 0) {
+                var remaining_bits = self.value_size;
+                while (remaining_bits > 0) {
                     if (self.bit == @bitSizeOf(UnderlyingType)) {
                         self.arr_index += 1;
                         self.bit = reserved_bits;
                     }
 
-                    const to_output = @min(remainding_bits, @bitSizeOf(UnderlyingType) - self.bit);
+                    const to_output = @min(remaining_bits, @bitSizeOf(UnderlyingType) - self.bit);
                     var shifted = self.bp.arr.items[self.arr_index] << @intCast(self.bit); // "Mask" upper bits
                     shifted >>= @intCast(@bitSizeOf(UnderlyingType) - to_output); // "Mask" lower bits
-                    output |= @as(ValueType, @intCast(shifted)) << @intCast(remainding_bits - to_output);
-                    remainding_bits -= to_output;
+                    output |= @as(ValueType, @intCast(shifted)) << @intCast(remaining_bits - to_output);
+                    remaining_bits -= to_output;
                     self.bit += to_output;
                 }
                 return output;
