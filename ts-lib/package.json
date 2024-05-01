@@ -22,7 +22,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "wasm-opt -O4 --all-features ../zig-out/bin/smol-string.wasm -o ./src/module.wasm && tsc && vite build",
 		"preview": "vite preview",
 		"test": "vitest",
 		"test:chrome": "vitest --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
