@@ -45,7 +45,7 @@
 	"devDependencies": {
 		"@vitest/browser": "^1.4.0",
 		"binaryen": "^116.0.0",
-		"smol-string": "^1.0.0",
+		"smol-string": "^1.0.1",
 		"typescript": "^5.2.2",
 		"vite": "^5.0.0",
 		"vite-plugin-dts": "^3.6.2",
