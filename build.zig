@@ -15,12 +15,24 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseSmall });
 
+    var lib_target_query = std.Target.Query{ .cpu_arch = .wasm32, .os_tag = .freestanding };
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.bulk_memory));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.extended_const));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.multivalue));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.mutable_globals));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.reference_types));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.relaxed_simd));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.sign_ext));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.simd128));
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.tail_call));
+    const lib_target = b.resolveTargetQuery(lib_target_query);
+
     var lib = b.addExecutable(.{
         .name = "smol-string",
         // In this case the main source file is merely a path, however, in more
         // complicated build scripts, this could be a generated file.
         .root_source_file = .{ .path = "src/wasm.zig" },
-        .target = b.resolveTargetQuery(std.zig.CrossTarget{ .cpu_arch = .wasm32, .os_tag = .freestanding }),
+        .target = lib_target,
         .optimize = .ReleaseSmall,
     });
     lib.entry = .disabled;
