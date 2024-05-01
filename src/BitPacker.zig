@@ -1,5 +1,15 @@
 const std = @import("std");
 
+fn BitMasks(comptime T: type) [@bitSizeOf(T) + 1]T {
+    var masks: [@bitSizeOf(T) + 1]T = undefined;
+    masks[0] = 0;
+    for (1..@bitSizeOf(T)) |i| {
+        masks[i] = ~@as(T, 0) >> @intCast(@bitSizeOf(T) - i);
+    }
+    masks[@bitSizeOf(T)] = ~@as(T, 0);
+    return masks;
+}
+
 // initial_bit_size: Determine the initial expected max values.
 // reserved_bits: Skip this number of bits in each array item. Reduces the packer efficiency to produce valid values for your target encoding.
 pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comptime initial_bit_size: u8, comptime reserved_bits: u8) type {
@@ -154,23 +164,42 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
                 self.index += 1;
                 self.index_since_reset += 1;
 
-                var output: ValueType = 0;
-
-                var remaining_bits = self.value_size;
-                while (remaining_bits > 0) {
-                    if (self.bit == @bitSizeOf(UnderlyingType)) {
+                if (@bitSizeOf(UnderlyingType) - reserved_bits > @bitSizeOf(ValueType)) {
+                    // Here, we now we'll extract the value from at most 2 underlying items.
+                    const available_bits = (@bitSizeOf(UnderlyingType) - self.bit);
+                    if (self.value_size <= available_bits) { // Single item case
+                        const output: ValueType = @truncate((self.bp.arr.items[self.arr_index] >> @intCast(available_bits - self.value_size)) & (comptime BitMasks(ValueType))[self.value_size]);
+                        if (available_bits == self.value_size) {
+                            self.arr_index += 1;
+                            self.bit = reserved_bits;
+                        } else self.bit += self.value_size;
+                        return output;
+                    } else {
+                        const next_bits = self.value_size - available_bits;
+                        var output: ValueType = @truncate((self.bp.arr.items[self.arr_index] & (comptime BitMasks(ValueType))[available_bits]) << @intCast(next_bits));
+                        output |= @truncate((self.bp.arr.items[self.arr_index + 1] >> @intCast(@bitSizeOf(UnderlyingType) - (reserved_bits + next_bits))) & (comptime BitMasks(ValueType))[next_bits]);
                         self.arr_index += 1;
-                        self.bit = reserved_bits;
+                        self.bit = reserved_bits + next_bits;
+                        return output;
                     }
+                } else {
+                    var output: ValueType = 0;
+                    var remaining_bits = self.value_size;
+                    while (remaining_bits > 0) {
+                        if (self.bit == @bitSizeOf(UnderlyingType)) {
+                            self.arr_index += 1;
+                            self.bit = reserved_bits;
+                        }
 
-                    const to_output = @min(remaining_bits, @bitSizeOf(UnderlyingType) - self.bit);
-                    var shifted = self.bp.arr.items[self.arr_index] << @intCast(self.bit); // "Mask" upper bits
-                    shifted >>= @intCast(@bitSizeOf(UnderlyingType) - to_output); // "Mask" lower bits
-                    output |= @as(ValueType, @intCast(shifted)) << @intCast(remaining_bits - to_output);
-                    remaining_bits -= to_output;
-                    self.bit += to_output;
+                        const to_output = @min(remaining_bits, @bitSizeOf(UnderlyingType) - self.bit);
+                        var shifted = self.bp.arr.items[self.arr_index] << @intCast(self.bit); // "Mask" upper bits
+                        shifted >>= @intCast(@bitSizeOf(UnderlyingType) - to_output); // "Mask" lower bits
+                        output |= @as(ValueType, @intCast(shifted)) << @intCast(remaining_bits - to_output);
+                        remaining_bits -= to_output;
+                        self.bit += to_output;
+                    }
+                    return output;
                 }
-                return output;
             }
         };
 
