@@ -34,14 +34,6 @@ export default defineConfig({
 					// The function to generate import names of top-level await promise in each chunk module
 					promiseImportName: (i) => `__tla_${i}`,
 				}),
-				{
-					name: "optimize-wasm",
-					async buildStart(options) {
-						exec(
-							"npx wasm-opt -O3 ../zig-out/bin/smol-string.wasm -o ./src/module.wasm"
-						);
-					},
-				},
 			];
 		},
 	},
