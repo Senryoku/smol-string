@@ -5,8 +5,6 @@ import pkg from "./package.json" assert { type: "json" };
 
 import topLevelAwait from "vite-plugin-top-level-await";
 
-import { exec } from "child_process";
-
 export default defineConfig({
 	build: {
 		lib: {

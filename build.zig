@@ -15,12 +15,15 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseSmall });
 
+    var lib_target_query = std.Target.Query{ .cpu_arch = .wasm32, .os_tag = .freestanding };
+    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.bulk_memory));
+
     var lib = b.addExecutable(.{
         .name = "smol-string",
         // In this case the main source file is merely a path, however, in more
         // complicated build scripts, this could be a generated file.
         .root_source_file = .{ .path = "src/wasm.zig" },
-        .target = b.resolveTargetQuery(std.zig.CrossTarget{ .cpu_arch = .wasm32, .os_tag = .freestanding }),
+        .target = b.resolveTargetQuery(lib_target_query),
         .optimize = .ReleaseSmall,
     });
     lib.entry = .disabled;
