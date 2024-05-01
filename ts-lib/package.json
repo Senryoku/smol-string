@@ -1,6 +1,6 @@
 {
 	"name": "smol-string",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Compression for browser localStorage",
 	"author": "Senryoku <maretverdant@gmail.com>",
 	"repository": {
