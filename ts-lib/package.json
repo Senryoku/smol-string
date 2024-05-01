@@ -22,14 +22,15 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "npx wasm-opt -O4 --all-features ../zig-out/bin/smol-string.wasm -o ./src/module.wasm && tsc && vite build",
+		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"test": "vitest",
 		"test:chrome": "vitest --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
 		"test:firefox": "vitest --browser.name=firefox --browser.headless --config browser.vitest.config.ts",
 		"test:edge": "vitest --browser.name=edge --browser.headless --config browser.vitest.config.ts",
 		"test:safari": "vitest --browser.name=safari --no-browser.headless --config browser.vitest.config.ts",
-		"bench": "vitest bench"
+		"bench": "vitest bench",
+		"wasm-opt": "wasm-opt -O4 --all-features ../zig-out/bin/smol-string.wasm -o ./src/module.wasm"
 	},
 	"main": "./dist/smol-string.js",
 	"exports": {

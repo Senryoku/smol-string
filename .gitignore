@@ -1,5 +1,4 @@
 zig-cache
 zig-out
-!zig-out/bin/smol-string.wasm
 
 build.bat
