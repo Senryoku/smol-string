@@ -24,7 +24,6 @@ pub fn build(b: *std.Build) void {
     lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.relaxed_simd));
     lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.sign_ext));
     lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.simd128));
-    lib_target_query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.tail_call));
     const lib_target = b.resolveTargetQuery(lib_target_query);
 
     var lib = b.addExecutable(.{
