@@ -35,7 +35,7 @@ jobs:
             - name: Run tests
               run: npm test
             - name: Safari Tests
-              if: matrix.os  == 'macos-latest'
+              if: matrix.os == 'macos-latest'
               run: npm run test:safari
             - name: Chrome Tests
               if: always()
@@ -44,7 +44,7 @@ jobs:
               if: always()
               run: npm run test:firefox
             - name: Edge Tests
-              if: always()
+              if: matrix.os != 'macos-latest'
               run: npm run test:edge
             - name: Benchmarks
               if: always()
