@@ -54,7 +54,7 @@ pub fn build(b: *std.Build) void {
         .name = "profile",
         .root_source_file = .{ .path = "src/profile.zig" },
         .target = target,
-        .optimize = .Debug,
+        .optimize = .ReleaseSmall,
     });
     b.installArtifact(profile);
 
