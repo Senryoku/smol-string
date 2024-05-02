@@ -97,8 +97,7 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
     try context.ensureTotalCapacity(std.math.maxInt(TokenType));
     context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
 
-    // FIXME: Why *4? Because benchmarks are 10% slower without it. I have no idea why.
-    var output = try std.ArrayList(u8).initCapacity(allocator, 4 * expected_output_size);
+    var output = try std.ArrayList(u8).initCapacity(allocator, expected_output_size);
     output.appendAssumeCapacity(@intCast(data[0] - reserved_codepoints));
 
     context.items[data[0]] = output.items[0..1];
