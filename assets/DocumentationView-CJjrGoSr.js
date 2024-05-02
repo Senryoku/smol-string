@@ -1,4 +1,4 @@
-import{g as t,o as c,c as r,p,h as i,b as e,i as o}from"./index-DAHJ2OOh.js";const d={},n=s=>(p("data-v-237e2f41"),s=s(),i(),s),a=n(()=>e("h2",null,"Documentation",-1)),m=n(()=>e("div",null,[e("p",null,[o("More information on the "),e("a",{href:"https://github.com/Senryoku/smol-string"},"GitHub Repository"),o(".")]),e("p",null,[o(" Basic usage: "),e("pre",null,[e("code",null,`import { compress, decompress } from "smol-string";
+import{g as t,o as c,c as r,p,h as i,b as e,i as o}from"./index-R8a5rRu8.js";const d={},n=s=>(p("data-v-237e2f41"),s=s(),i(),s),a=n(()=>e("h2",null,"Documentation",-1)),m=n(()=>e("div",null,[e("p",null,[o("More information on the "),e("a",{href:"https://github.com/Senryoku/smol-string"},"GitHub Repository"),o(".")]),e("p",null,[o(" Basic usage: "),e("pre",null,[e("code",null,`import { compress, decompress } from "smol-string";
 
 const input = "Any JS String";
 
