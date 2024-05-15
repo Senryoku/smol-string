@@ -60,14 +60,8 @@ const decompressed = await decompress(compressed);'
         (Warning: The page might be unresponsive while the benchmarks are running)
       </p>
       <p>Example run in Chrome:</p>
-      <img
-        src="https://private-user-images.githubusercontent.com/1338143/330982572-20df3f76-959a-428b-8c50-c8f9fbcf1020.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTU4MTQ1OTIsIm5iZiI6MTcxNTgxNDI5MiwicGF0aCI6Ii8xMzM4MTQzLzMzMDk4MjU3Mi0yMGRmM2Y3Ni05NTlhLTQyOGItOGM1MC1jOGY5ZmJjZjEwMjAucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI0MDUxNSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDA1MTVUMjMwNDUyWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9OWYyMjRhYjg4OWYzZTg3ZTQwYjg3YTJkYTQxZjM3MjA5MGVkNTViODE3ZWJlYTVkOGFiZTEzZGVkMzQ1NmZiYyZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QmYWN0b3JfaWQ9MCZrZXlfaWQ9MCZyZXBvX2lkPTAifQ.CH_LJrMZJPAgQm9htcK_-2SwY3inhXJDuPrbHydxEVQ"
-        alt="Compression Benchmark Results"
-      />
-      <img
-        src="https://private-user-images.githubusercontent.com/1338143/330982603-38d7ca8a-7ef5-4516-b5c1-02db2cdae6b7.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTU4MTQ1OTIsIm5iZiI6MTcxNTgxNDI5MiwicGF0aCI6Ii8xMzM4MTQzLzMzMDk4MjYwMy0zOGQ3Y2E4YS03ZWY1LTQ1MTYtYjVjMS0wMmRiMmNkYWU2YjcucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI0MDUxNSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDA1MTVUMjMwNDUyWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9ZWIzZmM4YTdhZmZkOWMwOTZhNTc0OTNkYjgzZjJkZjdlMTMwNjczNjI0NjE5NmY3ODY2YWQyNGVmYjdlYjVhNyZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QmYWN0b3JfaWQ9MCZrZXlfaWQ9MCZyZXBvX2lkPTAifQ.0l95_2QGK5xgNKaUBR1KK1J7QJrnfNKPbTZbvsR0jBQ"
-        alt="Decompression Benchmark Results"
-      />
+      <img src="../assets/img/bench-compress-min.png" alt="Compression Benchmark Results" />
+      <img src="../assets/img/bench-decompress-min.png" alt="Decompression Benchmark Results" />
     </section>
     <section>
       <h2>More Information</h2>
