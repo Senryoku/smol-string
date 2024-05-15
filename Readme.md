@@ -52,6 +52,13 @@ npm run build     # Builds the Typescript library to `ts-lib/dist`.
 
 Here are some benchmark results comparing `smol-string` to `lz-string` in Chrome. You can run them yourself by visiting https://senryoku.github.io/smol-string/bench.
 
+![image](https://github.com/Senryoku/smol-string/assets/1338143/20df3f76-959a-428b-8c50-c8f9fbcf1020)
+
+![image](https://github.com/Senryoku/smol-string/assets/1338143/38d7ca8a-7ef5-4516-b5c1-02db2cdae6b7)
+
+![image](https://github.com/Senryoku/smol-string/assets/1338143/235683f0-75e8-4c4c-a2e1-2b89e50cc549)
+
+
 ### UTF-16 Compatibility
 
 lz-string offers multiple output formats, including one producing only valid UTF-16 strings. This was done to ensure compatibility with localStorage in all browsers. 
