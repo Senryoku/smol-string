@@ -3,43 +3,63 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div>
+  <div class="app">
     <header>
-      <div class="title">
-        <h1 style="white-space: nowrap">smol-string</h1>
-        <div style="flex-grow: 1"></div>
-        <a href="https://github.com/Senryoku/smol-string" target="_blank">
-          <img class="icon" src="./assets/img/github-mark-white.svg" alt="GitHub" />
-        </a>
-        <a href="https://www.npmjs.com/package/smol-string" target="_blank">
-          <img class="icon" src="./assets/img/npm-logo-red.svg" alt="npm" />
-        </a>
-      </div>
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/bench">Benchmarks</RouterLink>
-        <RouterLink to="/docs">Documentation</RouterLink>
-        <div style="flex-grow: 1"></div>
-      </nav>
+      <h1 style="white-space: nowrap">smol-string</h1>
+      <div style="flex-grow: 1"></div>
+      <a href="https://github.com/Senryoku/smol-string" target="_blank">
+        <img class="icon" src="./assets/img/github-mark-white.svg" alt="GitHub" />
+      </a>
+      <a href="https://www.npmjs.com/package/smol-string" target="_blank">
+        <img class="icon" src="./assets/img/npm-logo-red.svg" alt="npm" />
+      </a>
     </header>
-    <div>
+    <nav>
+      <RouterLink to="/">Home</RouterLink>
+      <RouterLink to="/bench">Benchmarks</RouterLink>
+      <div style="flex-grow: 1"></div>
+    </nav>
+    <div class="content">
       <RouterView />
     </div>
   </div>
 </template>
 
 <style scoped>
+.app {
+  margin-bottom: 5rem;
+}
+
 nav {
   display: flex;
   gap: 1em;
-  margin: 0.25em 1em;
+  padding: 0.5em 1em;
+  background: #000;
 }
 
-.title {
+nav a {
+  position: relative;
+}
+
+nav a:hover:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.5em;
+  height: 1px;
+  background: #afd0ee;
+}
+
+header {
   display: flex;
   gap: 1em;
-  margin: 0.25em 1em;
+  padding: 0.25em 1.5em;
   align-items: center;
+}
+
+.content {
+  padding: 0 2em;
 }
 
 .icon {

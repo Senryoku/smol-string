@@ -165,8 +165,8 @@ onMounted(async () => {
   const usedTests = [
     { name: 'json_512kb', input: JSON.stringify((await json_512kb).default) },
     { name: 'json_1mb', input: JSON.stringify((await json_1mb).default) },
-    { name: 'rw_medium', input: JSON.stringify((await rw_medium).default) },
-    { name: 'rw_large', input: JSON.stringify((await rw_large).default) }
+    { name: 'json_4mb', input: JSON.stringify((await rw_medium).default) },
+    { name: 'json_8mb', input: JSON.stringify((await rw_large).default) }
   ]
 
   for (const { name, input } of usedTests) {
@@ -180,6 +180,8 @@ onMounted(async () => {
       LZString.decompressFromUTF16
     )
   }
+
+  console.log(await results.value)
 })
 </script>
 

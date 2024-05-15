@@ -4,7 +4,7 @@
   max-width: 1280px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 1rem 0;
 
   font-weight: normal;
 
@@ -13,7 +13,7 @@
 
 a {
   text-decoration: none;
-  color: #699fd1;
+  color: #99bcdd;
   transition: 0.4s;
 }
 

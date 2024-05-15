@@ -13,11 +13,6 @@ const router = createRouter({
       path: '/bench',
       name: 'bench',
       component: () => import('../views/BenchmarksView.vue')
-    },
-    {
-      path: '/docs',
-      name: 'docs',
-      component: () => import('../views/DocumentationView.vue')
     }
   ]
 })

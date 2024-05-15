@@ -13,6 +13,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@highlightjs/vue-plugin": "^2.1.0",
     "chart.js": "^4.4.0",
     "pinia": "^2.1.7",
     "smol-string": "file:../ts-lib",
