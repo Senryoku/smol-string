@@ -1,130 +1,24 @@
 <template>
   <div>
-    <div>
-      <h3>Compression Time</h3>
-      <div>
-        <Bar :options="chartOptions" :data="chartDataCompression!" />
-      </div>
-    </div>
-    <div>
-      <h3>Decompression Time</h3>
-      <div>
-        <Bar :options="chartOptions" :data="chartDataDecompression!" />
-      </div>
-    </div>
-    <div>
-      <h3>Compressed Size</h3>
-      <div>
-        <Bar :options="chartSizeOptions" :data="chartDataSize!" />
-      </div>
-    </div>
+    <BenchmarkResults :results="results" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-
-import { Bar } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Colors
-} from 'chart.js'
-
-ChartJS.defaults.color = '#ddd'
-ChartJS.defaults.borderColor = '#555'
-
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors)
+import { ref, onMounted } from 'vue'
 
 import { compress, decompress } from 'smol-string/worker'
 
 // @ts-expect-error
 import LZString from '../../lz-string.min.js'
 
+import BenchmarkResults from './BenchmarkResults.vue'
+
 const results = ref({ compressed: {}, decompressed: {}, success: {}, size: {} } as {
   compressed: Record<string, Record<string, number>>
   decompressed: Record<string, Record<string, number>>
   size: Record<string, Record<string, number>>
   success: Record<string, Record<string, boolean>>
-})
-
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: true,
-  plugins: {
-    colors: {
-      forceOverride: true
-    }
-  },
-  scales: {
-    x: {
-      title: {
-        display: true,
-        text: 'File'
-      }
-    },
-    y: {
-      title: {
-        display: true,
-        text: 'Time (ms)'
-      }
-    }
-  }
-}
-
-const chartSizeOptions = structuredClone(chartOptions)
-chartSizeOptions.scales.y.title.text = 'Size (%)'
-
-const methods = ['smol-string', 'LZString', 'LZString UTF-16']
-
-const chartDataCompression = computed(() => {
-  const datasets = []
-  for (const method of methods) {
-    datasets.push({
-      label: method,
-      data: Object.values(results.value['compressed']).map((o) => o[method] ?? 0)
-    })
-  }
-
-  return {
-    labels: Object.keys(results.value['compressed']),
-    datasets
-  }
-})
-
-const chartDataDecompression = computed(() => {
-  const datasets = []
-  for (const method of methods) {
-    datasets.push({
-      label: method,
-      data: Object.values(results.value['decompressed']).map((o) => o[method] ?? 0)
-    })
-  }
-
-  return {
-    labels: Object.keys(results.value['decompressed']),
-    datasets
-  }
-})
-
-const chartDataSize = computed(() => {
-  const datasets = []
-  for (const method of methods) {
-    datasets.push({
-      label: method,
-      data: Object.values(results.value['size']).map((o) => o[method] ?? 0)
-    })
-  }
-
-  return {
-    labels: Object.keys(results.value['size']),
-    datasets
-  }
 })
 
 async function test(
@@ -180,8 +74,6 @@ onMounted(async () => {
       LZString.decompressFromUTF16
     )
   }
-
-  console.log(await results.value)
 })
 </script>
 
