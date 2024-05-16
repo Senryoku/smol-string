@@ -70,18 +70,10 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
         }
     }
 
-    // Handle the last unencoded bytes.
+    // Handle the (potentially) last unencoded byte.
     if (i < data.len) {
-        if (i + 1 >= data.len) {
-            output.appendAssumeCapacity(@intCast(data[i]));
-        } else {
-            if (context.get(data[i .. i + 2])) |value| {
-                output.appendAssumeCapacity(value);
-            } else {
-                output.appendAssumeCapacity(@as(BitPacker.ValueType, @intCast(data[i])));
-                output.appendAssumeCapacity(@intCast(data[i + 1]));
-            }
-        }
+        std.debug.assert(i == data.len - 1);
+        output.appendAssumeCapacity(@intCast(data[i]));
     }
 
     return output;
