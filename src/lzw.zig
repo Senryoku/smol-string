@@ -3,8 +3,6 @@ const std = @import("std");
 const Context = @import("Context.zig");
 const bp = @import("./BitPacker.zig");
 
-const impl = @import("lzw.zig");
-
 pub const BitPacker = bp.BitPacker(u64, u20, 9, 0);
 
 pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
@@ -140,9 +138,9 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
 fn testRound(str: []const u8) !void {
     var compressed = try compress(str, std.testing.allocator);
     defer compressed.deinit();
-    const unpacked_data = try compressed.unpackWithReset(std.testing.allocator, std.math.maxInt(impl.BitPacker.ValueType));
+    const unpacked_data = try compressed.unpackWithReset(std.testing.allocator, std.math.maxInt(BitPacker.ValueType));
     defer std.testing.allocator.free(unpacked_data);
-    const decompressed = try decompress(impl.BitPacker.ValueType, 0, std.math.maxInt(impl.BitPacker.ValueType), unpacked_data, str.len, std.testing.allocator);
+    const decompressed = try decompress(BitPacker.ValueType, 0, std.math.maxInt(BitPacker.ValueType), unpacked_data, str.len, std.testing.allocator);
     defer decompressed.deinit();
     try std.testing.expectEqualSlices(u8, str, decompressed.items);
 }
