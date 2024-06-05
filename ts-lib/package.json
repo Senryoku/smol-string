@@ -30,6 +30,10 @@
 		"test:edge": "vitest --browser.name=edge --browser.headless --config browser.vitest.config.ts",
 		"test:safari": "vitest --browser.name=safari --no-browser.headless --config browser.vitest.config.ts",
 		"bench": "vitest bench",
+		"bench:chrome": "vitest bench --no-watch --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
+		"bench:firefox": "vitest bench --no-watch --browser.name=firefox --browser.headless --config browser.vitest.config.ts",
+		"bench:edge": "vitest bench --no-watch --browser.name=edge --browser.headless --config browser.vitest.config.ts",
+		"bench:safari": "vitest bench --no-watch --browser.name=safari --no-browser.headless --config browser.vitest.config.ts",
 		"wasm-opt": "wasm-opt -O4 --all-features ../zig-out/bin/smol-string.wasm -o ./src/module.wasm"
 	},
 	"main": "./dist/smol-string.js",

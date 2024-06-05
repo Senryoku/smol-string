@@ -49,3 +49,15 @@ jobs:
             - name: Benchmarks
               if: always()
               run: npm run bench
+            - name: Safari Benchmarks
+              if: matrix.os == 'macos-latest'
+              run: npm run bench:safari
+            - name: Chrome Benchmarks
+              if: always()
+              run: npm run bench:chrome
+            - name: Firefox Benchmarks
+              if: always()
+              run: npm run bench:firefox
+            - name: Edge Benchmarks
+              if: matrix.os != 'macos-latest'
+              run: npm run bench:edge
