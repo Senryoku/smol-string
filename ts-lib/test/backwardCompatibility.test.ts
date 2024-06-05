@@ -8,7 +8,7 @@ import { compress, decompress } from "../dist/smol-string.js";
 import {
 	compress as npmCompress,
 	decompress as npmDecompress,
-} from "smol-string";
+} from "../node_modules/smol-string/dist/smol-string.js";
 
 describe("compress using previous version and decompress using latest version", () => {
 	for (const arr of [TestData, RandomTestData]) {
