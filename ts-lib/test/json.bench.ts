@@ -7,7 +7,7 @@ import { compress, decompress } from "../dist/smol-string.js";
 import {
 	compress as npmCompress,
 	decompress as npmDecompress,
-} from "smol-string";
+} from "../node_modules/smol-string/dist/smol-string.js";
 
 const options = { iterations: 10, timeout: 100000 };
 
