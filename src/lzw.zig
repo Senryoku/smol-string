@@ -10,9 +10,8 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
 
     const first_allocated_token: BitPacker.ValueType = comptime std.math.maxInt(u8) + 1;
     var next_value: BitPacker.ValueType = first_allocated_token;
-    var context = Context.HashMap(BitPacker.ValueType).init(allocator);
+    var context = try Context.Context(BitPacker.ValueType).initCapacity(allocator, @as(usize, @min(std.math.maxInt(BitPacker.ValueType), data.len)));
     defer context.deinit();
-    try context.ensureTotalCapacity(@min(std.math.maxInt(BitPacker.ValueType), data.len));
 
     // Max string length in dictionary based on its first character.
     var max_length: [256]u16 = undefined;
