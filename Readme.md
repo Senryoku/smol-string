@@ -1,4 +1,4 @@
-# smol-string
+# smol-string [![Zig Lib](https://github.com/Senryoku/smol-string/actions/workflows/zig.yml/badge.svg)](https://github.com/Senryoku/smol-string/actions/workflows/zig.yml) [![TS Lib](https://github.com/Senryoku/smol-string/actions/workflows/ts-lib.yml/badge.svg)](https://github.com/Senryoku/smol-string/actions/workflows/ts-lib.yml)
 
 `smol-string` is a compression library designed for use with browsers' `localStorage` (and `sessionStorage`). It serves as a faster alternative to [`lz-string`](https://github.com/pieroxy/lz-string).
 
