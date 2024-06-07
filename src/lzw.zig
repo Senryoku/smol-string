@@ -83,8 +83,8 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
     var next_value: TokenType = first_allocated_token;
     var context = std.ArrayList(?[]u8).init(allocator);
     defer context.deinit();
-    try context.ensureTotalCapacity(std.math.maxInt(TokenType));
-    context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
+    try context.ensureTotalCapacity(@min(std.math.maxInt(TokenType), first_allocated_token + data.len));
+    context.appendNTimesAssumeCapacity(null, context.capacity);
 
     var output = try std.ArrayList(u8).initCapacity(allocator, expected_output_size);
     output.appendAssumeCapacity(@intCast(data[0] - reserved_codepoints));
@@ -122,7 +122,7 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
             // Reinitialize state
             next_value = first_allocated_token;
             context.clearRetainingCapacity();
-            context.appendNTimesAssumeCapacity(null, std.math.maxInt(TokenType));
+            context.appendNTimesAssumeCapacity(null, context.capacity);
             try std.testing.expect(data[i] < first_allocated_token);
             output.appendAssumeCapacity(@intCast(data[i] - reserved_codepoints));
         }
