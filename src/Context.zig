@@ -8,7 +8,7 @@ pub fn Context(comptime V: type) type {
 
         const Entry = packed struct(u8) {
             used: bool = false,
-            hash_low: u7 = undefined, // Used as a 'fast' equality check, before comparing the keys. In practice, this doesn't seem to make much of a difference, but neither does reducing the size of entries to a single bit.
+            hash_high: u7 = undefined, // Used as a 'fast' equality check, before comparing the keys. In practice, this doesn't seem to make much of a difference, but neither does reducing the size of entries to a single bit.
         };
 
         entries: []Entry,
@@ -20,9 +20,8 @@ pub fn Context(comptime V: type) type {
 
         pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !Self {
             std.debug.assert(capacity < (std.math.maxInt(usize) >> 1));
-            // Use next power of two for our capacity. This way we can simplify the modulo
-            // using a bitwise and.
-            var c = @as(usize, 1) << @intCast(1 + (@bitSizeOf(usize) - @clz(capacity)));
+            // Use next power of two for our capacity. This way we can simplify the modulo using a bitwise and.
+            var c: usize = @as(usize, 1) << @intCast(@min(@bitSizeOf(usize) - 1, (@bitSizeOf(usize) - @clz(capacity))));
             // Make extra sure we won't come too close to the capacity limit.
             if (@clz(c) > 0 and @as(f32, @floatFromInt(c)) / @as(f32, @floatFromInt(capacity)) < 1.2) c <<= 1;
             var r = Self{
@@ -64,7 +63,7 @@ pub fn Context(comptime V: type) type {
             const h = Self.hash(key);
             const index = h & self.mask;
             var i: usize = @intCast(index);
-            const entry: u8 = @bitCast(Entry{ .used = true, .hash_low = @truncate(h) });
+            const entry: u8 = @bitCast(Entry{ .used = true, .hash_high = @truncate(h >> (64 - 7)) });
             while (true) : (i = (i + 1) & self.mask) {
                 if (!self.entries[i].used) return null;
                 if (@as(u8, @bitCast(self.entries[i])) == entry and Self.eql(key, self.keys[i]))
@@ -79,7 +78,7 @@ pub fn Context(comptime V: type) type {
             while (self.entries[i].used) : (i = (i + 1) & self.mask) {
                 std.debug.assert(!Self.eql(key, self.keys[i]));
             }
-            self.entries[i] = .{ .used = true, .hash_low = @truncate(h) };
+            self.entries[i] = .{ .used = true, .hash_high = @truncate(h >> (64 - 7)) };
             self.keys[i] = key;
             self.values[i] = value;
         }
