@@ -47,7 +47,6 @@ pub fn Context(comptime V: type) type {
         }
 
         fn eql(a: []const u8, b: []const u8) bool {
-            // return std.mem.eql(u8, a, b);
             if (a.len != b.len) return false;
             const vec_size = 4;
             for (0..a.len / vec_size) |i| {
