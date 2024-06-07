@@ -5,6 +5,7 @@ const std = @import("std");
 pub fn Context(comptime V: type) type {
     return struct {
         const Self = @This();
+        const Hash = u64;
 
         const Entry = packed struct(u8) {
             used: bool = false,
@@ -18,7 +19,7 @@ pub fn Context(comptime V: type) type {
 
         allocator: std.mem.Allocator,
 
-        pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !Self {
+        pub inline fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !Self {
             std.debug.assert(capacity < (std.math.maxInt(usize) >> 1));
             // Use next power of two for our capacity. This way we can simplify the modulo using a bitwise and.
             var c: usize = @as(usize, 1) << @intCast(@min(@bitSizeOf(usize) - 1, (@bitSizeOf(usize) - @clz(capacity))));
@@ -35,14 +36,18 @@ pub fn Context(comptime V: type) type {
             return r;
         }
 
-        pub fn deinit(self: *Self) void {
+        pub inline fn deinit(self: *Self) void {
             self.allocator.free(self.values);
             self.allocator.free(self.keys);
             self.allocator.free(self.entries);
         }
 
-        fn hash(s: []const u8) u64 {
+        inline fn hash(s: []const u8) Hash {
             return std.hash.CityHash64.hash(s);
+        }
+
+        inline fn extractHashHigh(h: Hash) u7 {
+            return @truncate(h >> (@bitSizeOf(Hash) - @bitSizeOf(u7)));
         }
 
         fn eql(a: []const u8, b: []const u8) bool {
@@ -59,31 +64,31 @@ pub fn Context(comptime V: type) type {
             return true;
         }
 
-        pub fn get(self: *Self, key: []const u8) ?V {
-            const h = Self.hash(key);
+        pub inline fn get(self: *Self, key: []const u8) ?V {
+            const h = hash(key);
             const index = h & self.mask;
             var i: usize = @intCast(index);
-            const entry: u8 = @bitCast(Entry{ .used = true, .hash_high = @truncate(h >> (64 - 7)) });
-            while (true) : (i = (i + 1) & self.mask) {
-                if (!self.entries[i].used) return null;
-                if (@as(u8, @bitCast(self.entries[i])) == entry and Self.eql(key, self.keys[i]))
+            const entry: u8 = @bitCast(Entry{ .used = true, .hash_high = extractHashHigh(h) });
+            while (self.entries[i].used) : (i = (i + 1) & self.mask) {
+                if (@as(u8, @bitCast(self.entries[i])) == entry and eql(key, self.keys[i]))
                     return self.values[i];
             }
+            return null;
         }
 
         pub fn putAssumeCapacityNoClobber(self: *Self, key: []const u8, value: V) void {
-            const h = Self.hash(key);
+            const h = hash(key);
             const index = h & self.mask;
             var i: usize = @intCast(index);
             while (self.entries[i].used) : (i = (i + 1) & self.mask) {
-                std.debug.assert(!Self.eql(key, self.keys[i]));
+                std.debug.assert(!eql(key, self.keys[i]));
             }
-            self.entries[i] = .{ .used = true, .hash_high = @truncate(h >> (64 - 7)) };
+            self.entries[i] = .{ .used = true, .hash_high = extractHashHigh(h) };
             self.keys[i] = key;
             self.values[i] = value;
         }
 
-        pub fn clearRetainingCapacity(self: *Self) void {
+        pub inline fn clearRetainingCapacity(self: *Self) void {
             @memset(self.entries, .{});
         }
     };
