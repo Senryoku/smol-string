@@ -16,7 +16,11 @@ pub fn Context(comptime V: type) type {
         allocator: std.mem.Allocator,
 
         pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !Self {
-            const c = @as(usize, 1) << @intCast(1 + (@bitSizeOf(usize) - @clz(capacity)));
+            // Use next power of two for our capacity. This way we can simplify the modulo
+            // using a bitwise and.
+            var c = @as(usize, 1) << @intCast(1 + (@bitSizeOf(usize) - @clz(capacity)));
+            // Make extra sure we won't come too close to the capacity limit.
+            if (@as(f32, @floatFromInt(c)) / @as(f32, @floatFromInt(capacity)) < 1.2) c <<= 1;
             var r = Self{
                 .entries = try allocator.alloc(Entry, c),
                 .keys = try allocator.alloc([]const u8, c),
