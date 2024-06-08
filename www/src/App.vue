@@ -27,7 +27,7 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <style scoped>
 .app {
-  margin-bottom: 5rem;
+  padding-bottom: 5rem;
 }
 
 nav {
@@ -60,6 +60,12 @@ header {
 
 .content {
   padding: 0 2em;
+}
+
+@media (orientation: portrait) {
+  .content {
+    padding: 0 0.75em;
+  }
 }
 
 .icon {

@@ -2,19 +2,19 @@
   <div>
     <div>
       <h3>Compression Time</h3>
-      <div>
+      <div class="chart-container">
         <Bar :options="chartOptions" :data="chartDataCompression!" />
       </div>
     </div>
     <div>
       <h3>Decompression Time</h3>
-      <div>
+      <div class="chart-container">
         <Bar :options="chartOptions" :data="chartDataDecompression!" />
       </div>
     </div>
     <div>
       <h3>Compressed Size</h3>
-      <div>
+      <div class="chart-container">
         <Bar :options="chartSizeOptions" :data="chartDataSize!" />
       </div>
     </div>
@@ -52,7 +52,7 @@ const props = defineProps<{
 
 const chartOptions = {
   responsive: true,
-  maintainAspectRatio: true,
+  maintainAspectRatio: false,
   plugins: {
     colors: {
       forceOverride: true
@@ -125,4 +125,10 @@ const chartDataSize = computed(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+}
+</style>

@@ -173,7 +173,15 @@ const ChromeBenchmarkResults = {
 <style scoped>
 p {
   margin-left: 1em;
+  margin-right: 1em;
   margin-bottom: 1em;
+}
+
+@media (orientation: portrait) {
+  p {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+  }
 }
 
 code {
