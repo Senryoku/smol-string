@@ -81,9 +81,8 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
 
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
     var next_value: TokenType = first_allocated_token;
-    var context = std.ArrayList(?[]u8).init(allocator);
+    var context = try std.ArrayList(?[]const u8).initCapacity(allocator, @min(std.math.maxInt(TokenType), first_allocated_token + data.len));
     defer context.deinit();
-    try context.ensureTotalCapacity(@min(std.math.maxInt(TokenType), first_allocated_token + data.len));
     context.appendNTimesAssumeCapacity(null, context.capacity);
 
     var output = try std.ArrayList(u8).initCapacity(allocator, expected_output_size);
@@ -107,7 +106,6 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
                     // I think the only case where this might happen, is repeating characters.
                     // For example, 'aaaa' will be encoded as [129, 288, 129], with 288 representing 'aa'.
                     // However the decoder will never have encountered 'aa' before.
-                    // FIXME: Thoroughly test this.
                     output.appendSliceAssumeCapacity(output.items[prev_start..new_start]);
                     output.appendAssumeCapacity(output.items[prev_start]);
                 }
@@ -116,8 +114,8 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
             //                          equivalent to concat(prev_str, str[0])
             context.items[next_value] = output.items[prev_start .. new_start + 1];
             next_value += 1;
-        } else { // Special reset token
-            i += 1; // Skip special token
+        } else {
+            i += 1; // Skip special reset token
             if (i >= data.len) break;
             // Reinitialize state
             next_value = first_allocated_token;
