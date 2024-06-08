@@ -1,0 +1,2 @@
+https://senryoku.github.io/smol-string/
+https://senryoku.github.io/smol-string/bench
