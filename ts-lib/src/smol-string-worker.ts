@@ -1,4 +1,3 @@
-// @ts-expect-error
 import Worker from "./worker.js?worker&inline";
 
 const worker = new Worker();
