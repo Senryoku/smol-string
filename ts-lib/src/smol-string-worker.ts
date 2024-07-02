@@ -1,6 +1,6 @@
-import Worker from "./worker.js?worker";
-
-const worker = new Worker();
+const worker = new Worker(new URL("./worker.ts", import.meta.url), {
+	type: "module",
+});
 
 let nextID = 0;
 const resolver: Record<number, (str: string) => void> = {};
