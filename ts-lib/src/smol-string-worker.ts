@@ -1,4 +1,4 @@
-import Worker from "./worker.js?worker&inline";
+import Worker from "./worker.js?worker";
 
 const worker = new Worker();
 

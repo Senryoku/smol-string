@@ -6,6 +6,7 @@ import pkg from "./package.json" assert { type: "json" };
 import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
+	base: "./",
 	build: {
 		lib: {
 			entry: {

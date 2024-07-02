@@ -18,5 +18,11 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  server: {
+    fs: {
+      // Allow serving files from the ts-lib directory
+      allow: ['.', '../ts-lib']
+    }
   }
 })
