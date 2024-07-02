@@ -81,46 +81,46 @@ import BenchmarkResults from '@/components/BenchmarkResults.vue'
 const ChromeBenchmarkResults = {
   compressed: {
     json_512kb: {
-      'smol-string': 34.900000002235174,
-      LZString: 80.19999999925494,
-      'LZString UTF-16': 66.90000000223517
+      'smol-string': 24.200000000186265,
+      LZString: 122.8999999994412,
+      'LZString UTF-16': 63.09999999962747
     },
     json_1mb: {
-      'smol-string': 49.5,
-      LZString: 127.5,
-      'LZString UTF-16': 118.39999999850988
+      'smol-string': 35.40000000037253,
+      LZString: 120.40000000037253,
+      'LZString UTF-16': 126.29999999981374
     },
     json_4mb: {
-      'smol-string': 253.19999999925494,
-      LZString: 771.8000000007451,
-      'LZString UTF-16': 738.8999999985099
+      'smol-string': 159.69999999925494,
+      LZString: 711.5,
+      'LZString UTF-16': 600.2999999998137
     },
     json_8mb: {
-      'smol-string': 276.6000000014901,
-      LZString: 1458.5,
-      'LZString UTF-16': 1440.7999999970198
+      'smol-string': 193.09999999962747,
+      LZString: 1278.5,
+      'LZString UTF-16': 1147.6000000005588
     }
   },
   decompressed: {
     json_512kb: {
-      'smol-string': 5.300000000745058,
-      LZString: 15.300000000745058,
-      'LZString UTF-16': 15.199999999254942
+      'smol-string': 6.7999999998137355,
+      LZString: 16.200000000186265,
+      'LZString UTF-16': 16.199999999254942
     },
     json_1mb: {
-      'smol-string': 5.899999998509884,
-      LZString: 20.399999998509884,
-      'LZString UTF-16': 19.600000001490116
+      'smol-string': 6.099999999627471,
+      LZString: 24.40000000037253,
+      'LZString UTF-16': 22.5
     },
     json_4mb: {
-      'smol-string': 25.099999997764826,
-      LZString: 140.60000000149012,
-      'LZString UTF-16': 146.90000000223517
+      'smol-string': 23.100000000558794,
+      LZString: 138,
+      'LZString UTF-16': 136.19999999925494
     },
     json_8mb: {
-      'smol-string': 28.899999998509884,
-      LZString: 154.60000000149012,
-      'LZString UTF-16': 168.19999999925494
+      'smol-string': 33.799999999813735,
+      LZString: 165.79999999981374,
+      'LZString UTF-16': 148.59999999962747
     }
   },
   success: {
