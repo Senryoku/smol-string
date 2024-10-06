@@ -162,17 +162,7 @@ test "basic" {
 
 test "fuzzing" {
     // Doesn't ensure that the string is valid UTF-8, but it should not matter.
-    // Note: In the future, use std.testing.random_seed. See https://github.com/ziglang/zig/issues/17609.
-    const seed = std.crypto.random.int(u64);
-    errdefer std.debug.print("\nFuzzing Test FAILED\n\tSeed: {d}\n", .{seed});
-    var rng = std.rand.DefaultPrng.init(seed);
-    for (0..10) |_| {
-        const length = rng.random().intRangeAtMost(usize, 0, 10_000_000); // Up to ~10MB
-        const str = try std.testing.allocator.alloc(u8, length);
-        defer std.testing.allocator.free(str);
-        rng.fill(str);
-        try testRound(str);
-    }
+    return std.testing.fuzz(testRound, .{});
 }
 
 fn testFile(path: []const u8) !void {
