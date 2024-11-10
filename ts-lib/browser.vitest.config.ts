@@ -10,6 +10,7 @@ export default mergeConfig(
 		test: {
 			browser: {
 				enabled: true,
+				provider: "webdriverio",
 				name: "chrome",
 			},
 			include: ["test/*.test.ts", "test/*.test.browser.ts"],
