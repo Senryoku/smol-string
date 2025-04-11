@@ -160,9 +160,13 @@ test "basic" {
     try testRound("3333773737373777777373773737373");
 }
 
+fn fuzzer(_: []const u8, input: []const u8) !void {
+    try testRound(input);
+}
+
 test "fuzzing" {
     // Doesn't ensure that the string is valid UTF-8, but it should not matter.
-    return std.testing.fuzz(testRound, .{});
+    return std.testing.fuzz(@as([]const u8, ""), fuzzer, .{});
 }
 
 fn testFile(path: []const u8) !void {

@@ -39,8 +39,7 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
 
         // Initial capacity in number of values (approximate upper bound).
         pub fn initCapacity(allocator: std.mem.Allocator, initial_capacity: usize) !@This() {
-            const bit_count = @min(@bitSizeOf(ValueType), @as(u7, @intFromFloat(@log2(@as(f32, @floatFromInt(initial_capacity)) + 1))));
-            const capacity_in_underlying_type: u32 = @intCast(1 + (bit_count * initial_capacity + @bitSizeOf(UnderlyingType)) / @bitSizeOf(UnderlyingType));
+            const capacity_in_underlying_type: u32 = @intCast(1 + ((@bitSizeOf(ValueType) * initial_capacity) / @bitSizeOf(UnderlyingType)));
             var r = @This(){
                 .arr = try std.ArrayList(UnderlyingType).initCapacity(allocator, capacity_in_underlying_type),
             };
