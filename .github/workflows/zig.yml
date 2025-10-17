@@ -14,16 +14,30 @@ jobs:
         runs-on: ${{matrix.os}}
         steps:
             - uses: actions/checkout@v4
-            - uses: mlugg/setup-zig@v1
+            - name: Get zig version
+              id: zigversion       
+              shell: pwsh 
+              run: |
+                $version = Get-Content -Path .zigversion -Raw
+                "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            - name: Setup zig
+              uses: mlugg/setup-zig@v2
               with:
-                version: 0.14.0
+                version: ${{ steps.zigversion.outputs.version }}
             - run: zig build test --summary all 
             # - run: zig build test --fuzz --summary all
     lint:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            - uses: mlugg/setup-zig@v1
+            - name: Get zig version
+              id: zigversion        
+              shell: pwsh 
+              run: |
+                $version = Get-Content -Path .zigversion -Raw
+                "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            - name: Setup zig
+              uses: mlugg/setup-zig@v2
               with:
-                version: 0.14.0
+                version: ${{ steps.zigversion.outputs.version }}
             - run: zig fmt --check src/*.zig
