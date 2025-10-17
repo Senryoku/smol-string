@@ -25,15 +25,15 @@
 		"build": "tsc && vite build",
 		"preview": "vite preview",
 		"test": "vitest",
-		"test:chrome": "vitest --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
-		"test:firefox": "vitest --browser.name=firefox --browser.headless --config browser.vitest.config.ts",
-		"test:edge": "vitest --browser.name=edge --browser.headless --config browser.vitest.config.ts",
-		"test:safari": "vitest --browser.name=safari --no-browser.headless --config browser.vitest.config.ts",
+		"test:chrome": "vitest --browser.instances.0.name=chrome --browser.instances.0.browser=chrome --browser.headless --config browser.vitest.config.ts",
+		"test:firefox": "vitest --browser.instances.0.name=firefox --browser.instances.0.browser=firefox --browser.headless --config browser.vitest.config.ts",
+		"test:edge": "vitest --browser.instances.0.name=edge --browser.instances.0.browser=edge --browser.headless --config browser.vitest.config.ts",
+		"test:safari": "vitest --browser.instances.0.name=safari --browser.instances.0.browser=safari --no-browser.headless --config browser.vitest.config.ts",
 		"bench": "vitest bench",
-		"bench:chrome": "vitest bench --no-watch --browser.name=chrome --browser.headless --config browser.vitest.config.ts",
-		"bench:firefox": "vitest bench --no-watch --browser.name=firefox --browser.headless --config browser.vitest.config.ts",
-		"bench:edge": "vitest bench --no-watch --browser.name=edge --browser.headless --config browser.vitest.config.ts",
-		"bench:safari": "vitest bench --no-watch --browser.name=safari --no-browser.headless --config browser.vitest.config.ts",
+		"bench:chrome": "vitest bench --no-watch --browser.instances.0.name=chrome --browser.instances.0.browser=chrome --browser.headless --config browser.vitest.config.ts",
+		"bench:firefox": "vitest bench --no-watch --browser.instances.0.name=firefox --browser.instances.0.browser=firefox --browser.headless --config browser.vitest.config.ts",
+		"bench:edge": "vitest bench --no-watch --browser.instances.0.name=edge --browser.instances.0.browser=edge --browser.headless --config browser.vitest.config.ts",
+		"bench:safari": "vitest bench --no-watch --browser.instances.0.name=safari --browser.instances.0.browser=safari --no-browser.headless --config browser.vitest.config.ts",
 		"wasm-opt": "wasm-opt -O4 --all-features ../zig-out/bin/smol-string.wasm -o ./src/module.wasm"
 	},
 	"main": "./dist/smol-string.js",
@@ -48,13 +48,13 @@
 		}
 	},
 	"devDependencies": {
-		"@vitest/browser": "^2.1.4",
-		"binaryen": "^120.0.0",
+		"@vitest/browser": "^3.2.4",
+		"binaryen": "^124.0.0",
 		"smol-string": "^1.0.3",
 		"typescript": "^5.2.2",
-		"vite": "^5.0.0",
+		"vite": "^7.1.10",
 		"vite-plugin-dts": "^4.3.0",
-		"vitest": "^2.1.4",
+		"vitest": "^3.2.4",
 		"webdriverio": "^9.2.11"
 	}
 }
