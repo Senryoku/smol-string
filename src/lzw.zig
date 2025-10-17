@@ -77,12 +77,12 @@ pub fn compress(data: []const u8, allocator: std.mem.Allocator) !BitPacker {
 }
 
 pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenType, comptime sentinel_token: TokenType, data: []const TokenType, expected_output_size: usize, allocator: std.mem.Allocator) !std.ArrayList(u8) {
-    if (data.len == 0) return std.ArrayList(u8).init(allocator);
+    if (data.len == 0) return .empty;
 
     const first_allocated_token: TokenType = comptime std.math.maxInt(u8) + 1 + reserved_codepoints;
     var next_value: TokenType = first_allocated_token;
     var context = try std.ArrayList(?[]const u8).initCapacity(allocator, @min(std.math.maxInt(TokenType), first_allocated_token + data.len));
-    defer context.deinit();
+    defer context.deinit(allocator);
     context.appendNTimesAssumeCapacity(null, context.capacity);
 
     var output = try std.ArrayList(u8).initCapacity(allocator, expected_output_size);
@@ -134,11 +134,11 @@ pub fn decompress(comptime TokenType: type, comptime reserved_codepoints: TokenT
 
 fn testRound(str: []const u8) !void {
     var compressed = try compress(str, std.testing.allocator);
-    defer compressed.deinit();
+    defer compressed.deinit(std.testing.allocator);
     const unpacked_data = try compressed.unpackWithReset(std.testing.allocator, std.math.maxInt(BitPacker.ValueType));
     defer std.testing.allocator.free(unpacked_data);
-    const decompressed = try decompress(BitPacker.ValueType, 0, std.math.maxInt(BitPacker.ValueType), unpacked_data, str.len, std.testing.allocator);
-    defer decompressed.deinit();
+    var decompressed = try decompress(BitPacker.ValueType, 0, std.math.maxInt(BitPacker.ValueType), unpacked_data, str.len, std.testing.allocator);
+    defer decompressed.deinit(std.testing.allocator);
     try std.testing.expectEqualSlices(u8, str, decompressed.items);
 }
 

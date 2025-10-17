@@ -11,7 +11,7 @@ pub fn main() !void {
         const start = try std.time.Instant.now();
         for (0..10) |_| {
             var compressed = try lzw.compress(str, allocator);
-            defer compressed.deinit();
+            defer compressed.deinit(allocator);
         }
         const end = try std.time.Instant.now();
 
@@ -20,7 +20,7 @@ pub fn main() !void {
     }
 
     var compressed = try lzw.compress(str, allocator);
-    defer compressed.deinit();
+    defer compressed.deinit(allocator);
     {
         const start = try std.time.Instant.now();
         for (0..100) |_| {
@@ -39,7 +39,7 @@ pub fn main() !void {
         const start = try std.time.Instant.now();
         for (0..100) |_| {
             var decompressed = try lzw.decompress(lzw.BitPacker.ValueType, 0, std.math.maxInt(lzw.BitPacker.ValueType), unpackedData, str.len, allocator);
-            defer decompressed.deinit();
+            defer decompressed.deinit(allocator);
         }
         const end = try std.time.Instant.now();
 

@@ -20,11 +20,11 @@ pub fn build(b: *std.Build) void {
 
     var lib = b.addExecutable(.{
         .name = "smol-string",
-        // In this case the main source file is merely a path, however, in more
-        // complicated build scripts, this could be a generated file.
-        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/wasm.zig" } },
-        .target = b.resolveTargetQuery(lib_target_query),
-        .optimize = .ReleaseSmall,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/wasm.zig"),
+            .target = b.resolveTargetQuery(lib_target_query),
+            .optimize = .ReleaseSmall,
+        }),
     });
     lib.entry = .disabled;
     lib.rdynamic = true;
@@ -37,9 +37,11 @@ pub fn build(b: *std.Build) void {
     // Creates a step for unit testing. This only builds the test executable
     // but does not run it.
     const unit_tests = b.addTest(.{
-        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/testAll.zig" } },
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/testAll.zig" } },
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
@@ -52,9 +54,11 @@ pub fn build(b: *std.Build) void {
 
     const profile = b.addExecutable(.{
         .name = "profile",
-        .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/profile.zig" } },
-        .target = target,
-        .optimize = .ReleaseSmall,
+        .root_module = b.createModule(.{
+            .root_source_file = .{ .src_path = .{ .owner = b, .sub_path = "src/profile.zig" } },
+            .target = target,
+            .optimize = .ReleaseSmall,
+        }),
     });
     b.installArtifact(profile);
 

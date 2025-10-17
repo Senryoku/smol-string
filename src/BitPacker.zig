@@ -14,7 +14,7 @@ fn BitMasks(comptime T: type) [@bitSizeOf(T) + 1]T {
 // reserved_bits: Skip this number of bits in each array item. Reduces the packer efficiency to produce valid values for your target encoding.
 pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comptime initial_bit_size: u8, comptime reserved_bits: u8) type {
     return struct {
-        arr: std.ArrayList(UnderlyingType),
+        arr: std.ArrayList(UnderlyingType) = .empty,
 
         size: usize = 0,
         size_since_reset: usize = 0,
@@ -30,10 +30,8 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
         }
 
         pub fn init(allocator: std.mem.Allocator) !@This() {
-            var r = @This(){
-                .arr = std.ArrayList(UnderlyingType).init(allocator),
-            };
-            try r.arr.append(0);
+            var r: @This() = .{};
+            try r.arr.append(allocator, 0);
             return r;
         }
 
@@ -48,9 +46,9 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
         }
 
         // FIXME: This should return a const version of @This()
-        pub fn fromSlice(allocator: std.mem.Allocator, data: []UnderlyingType, size: usize) !@This() {
+        pub fn fromSlice(data: []UnderlyingType, size: usize) !@This() {
             return @This(){
-                .arr = std.ArrayList(UnderlyingType).fromOwnedSlice(allocator, data),
+                .arr = std.ArrayList(UnderlyingType).fromOwnedSlice(data),
                 .size = size,
                 .size_since_reset = 0,
                 .value_size = 0, // FIXME: This is intended to be read-only. Passing a wrong value on purpose here.
@@ -63,7 +61,7 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
             while (it.next()) |v| {
                 r.appendAssumeCapacity(v);
             }
-            return r.toOwnedSlice();
+            return r.toOwnedSlice(allocator);
         }
 
         pub fn unpackWithReset(self: @This(), allocator: std.mem.Allocator, sentinel_token: ValueType) ![]const ValueType {
@@ -75,11 +73,11 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
                     it.resetValueSize();
                 }
             }
-            return r.toOwnedSlice();
+            return r.toOwnedSlice(allocator);
         }
 
-        pub fn deinit(self: *@This()) void {
-            self.arr.deinit();
+        pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
+            self.arr.deinit(allocator);
         }
 
         pub fn resetValueSize(self: *@This()) void {
@@ -87,10 +85,10 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
             self.size_since_reset = 0;
         }
 
-        pub fn append(self: *@This(), value: ValueType) !void {
+        pub fn append(self: *@This(), allocator: std.mem.Allocator, value: ValueType) !void {
             // We're being conservative here. Prefer using appendAssumeCapacity directly.
             if (self.bit + self.value_size + 1 >= @bitSizeOf(UnderlyingType))
-                try self.arr.ensureTotalCapacity(self.arr.items.len + 1);
+                try self.arr.ensureTotalCapacity(allocator, self.arr.items.len + 1);
             self.appendAssumeCapacity(value);
         }
 
@@ -219,13 +217,13 @@ pub fn BitPacker(comptime _UnderlyingType: type, comptime _ValueType: type, comp
 
 test "basics" {
     var bp = try BitPacker(u16, u16, 3, 0).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
-    try bp.append(2);
+    try bp.append(std.testing.allocator, 2);
     try std.testing.expectEqual(bp.arr.items[0], 2 << @intCast(16 - 3));
     try std.testing.expectEqual(bp.bit, 3);
 
-    try bp.append(3);
+    try bp.append(std.testing.allocator, 3);
     try std.testing.expectEqual(bp.arr.items[0], (2 << @intCast(16 - 3)) | (3 << @intCast(16 - 3 * 2)));
     try std.testing.expectEqual(bp.bit, 6);
 
@@ -237,13 +235,13 @@ test "basics" {
 test "reserved bits" {
     const reserved_bits = 1;
     var bp = try BitPacker(u16, u16, 3, reserved_bits).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
-    try bp.append(2);
+    try bp.append(std.testing.allocator, 2);
     try std.testing.expectEqual(bp.arr.items[0], 2 << @intCast(16 - 3 - reserved_bits));
     try std.testing.expectEqual(bp.bit, 3 + reserved_bits);
 
-    try bp.append(3);
+    try bp.append(std.testing.allocator, 3);
     try std.testing.expectEqual(bp.arr.items[0], (2 << @intCast(16 - 3 - reserved_bits)) | (3 << @intCast(16 - 3 * 2 - reserved_bits)));
     try std.testing.expectEqual(bp.bit, 6 + reserved_bits);
 
@@ -254,10 +252,10 @@ test "reserved bits" {
 
 test "incrementing bit size" {
     var bp = try BitPacker(u16, u16, 3, 0).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
     for (0..64) |v| {
-        try bp.append(@intCast(v));
+        try bp.append(std.testing.allocator, @intCast(v));
     }
 
     var it = bp.iterator();
@@ -268,10 +266,10 @@ test "incrementing bit size" {
 
 test "incrementing bit size and reserved bits" {
     var bp = try BitPacker(u16, u16, 3, 1).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
     for (0..64) |v| {
-        try bp.append(@intCast(v));
+        try bp.append(std.testing.allocator, @intCast(v));
     }
 
     // Make sure the reserved bit is unset
@@ -287,10 +285,10 @@ test "incrementing bit size and reserved bits" {
 
 test "initial_bit_size(2) and reserved_bits(0)" {
     var bp = try BitPacker(u16, u16, 2, 0).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
     for (0..32768) |v| {
-        try bp.append(@intCast(v));
+        try bp.append(std.testing.allocator, @intCast(v));
     }
 
     var it = bp.iterator();
@@ -301,10 +299,10 @@ test "initial_bit_size(2) and reserved_bits(0)" {
 
 test "initial_bit_size(9) and reserved_bits(1)" {
     var bp = try BitPacker(u16, u16, 9, 1).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
     for (0..32768) |v| {
-        try bp.append(@intCast(v));
+        try bp.append(std.testing.allocator, @intCast(v));
     }
 
     // Make sure the reserved bit is unset
@@ -320,10 +318,10 @@ test "initial_bit_size(9) and reserved_bits(1)" {
 
 test "underlying_type(u16), value_type(u32), initial_bit_size(9) and reserved_bits(1)" {
     var bp = try BitPacker(u16, u32, 9, 1).init(std.testing.allocator);
-    defer bp.deinit();
+    defer bp.deinit(std.testing.allocator);
 
     for (0..131072) |v| {
-        try bp.append(@intCast(v));
+        try bp.append(std.testing.allocator, @intCast(v));
     }
 
     // Make sure the reserved bit is unset

@@ -24,7 +24,7 @@ export fn compress(ptr: [*]u8, length: usize) i32 {
 
     const item_count = output.arr.items.len;
     const content_length: u64 = item_count * @sizeOf(impl.BitPacker.UnderlyingType) + 2 * @sizeOf(u32); // In bytes. Compressed stream followed by the token count and expected output length.
-    output.arr.ensureTotalCapacity(item_count + 2) catch {
+    output.arr.ensureTotalCapacity(allocator, item_count + 2) catch {
         return -1;
     };
     // Token Count and Expected Output Length followed by the usual footer
@@ -38,7 +38,7 @@ export fn decompress(ptr: [*]impl.BitPacker.UnderlyingType, length: usize, token
     const allocator = std.heap.page_allocator;
     const data: []impl.BitPacker.UnderlyingType = ptr[0..length];
 
-    const packedData = impl.BitPacker.fromSlice(allocator, data, token_count) catch {
+    const packedData = impl.BitPacker.fromSlice(data, token_count) catch {
         return -1;
     };
     // Note: Although the BitPacker (or rather, the Array under the BitPacker) technically takes ownership of the slice here,
@@ -54,7 +54,7 @@ export fn decompress(ptr: [*]impl.BitPacker.UnderlyingType, length: usize, token
 
     const item_count = output.items.len;
     const content_length = item_count;
-    output.ensureTotalCapacity(output.items.len + 2 * @sizeOf(usize)) catch {
+    output.ensureTotalCapacity(allocator, output.items.len + 2 * @sizeOf(usize)) catch {
         return -1;
     };
     output.appendAssumeCapacity(@intCast((content_length >> 0) & 0xFF));
