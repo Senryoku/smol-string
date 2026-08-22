@@ -19,3 +19,5 @@ self.onmessage = function (e: { data: Message }) {
 		}
 	}
 };
+
+self.postMessage({ id: -1, data: "worker_ready" });

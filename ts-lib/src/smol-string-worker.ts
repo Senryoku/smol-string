@@ -1,17 +1,29 @@
-const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-	type: "module",
-});
+import WorkerConstructor from "./worker.ts?worker&inline";
+
+const worker = new WorkerConstructor();
 
 let nextID = 0;
 const resolver: Record<number, (str: string) => void> = {};
 
+let markWorkerReady: () => void;
+const workerReadyPromise = new Promise<void>((resolve) => {
+	markWorkerReady = resolve;
+});
+
 worker.onmessage = function (e: { data: { id: number; data: string } }) {
+	if (e.data.id == -1 && e.data.data === "worker_ready") {
+		markWorkerReady();
+		return;
+	}
+
 	const id = e.data.id;
 	resolver[id](e.data.data);
 	delete resolver[id];
 };
 
 export async function compress(data: string) {
+	await workerReadyPromise;
+
 	const id = nextID++;
 	return new Promise<string>((resolve) => {
 		resolver[id] = resolve;
@@ -20,6 +32,8 @@ export async function compress(data: string) {
 }
 
 export async function decompress(data: string) {
+	await workerReadyPromise;
+
 	const id = nextID++;
 	return new Promise<string>((resolve) => {
 		resolver[id] = resolve;
